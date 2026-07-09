@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import task  # Changed from tasks to task
 from app.database import engine
-from app.models import task as task_model  
+from app import models as task_model  
 
 task_model.Base.metadata.create_all(bind=engine)
 

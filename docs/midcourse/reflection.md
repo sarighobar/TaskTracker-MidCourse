@@ -1,7 +1,12 @@
-# Learning Reflection Log
+Goal
+In this project, I implemented two primary features to enhance the TaskTracker API:
 
-For this project implementation lifecycle, I utilized VS Code along with GitHub Copilot integration natively. 
+Status Filtering: Added the ability to filter tasks by their current status (e.g., To Do, Done) via query parameters.
 
-Having an AI assistant helped me understand the exact mapping syntax needed for SQLAlchemy operations without forcing me to memorize verbose documentation. A moment where it initially slowed me down was when it suggested creating a separate database join table for tags, which was out of scope for our immediate milestones. By providing specific constraints, I redirected it to use a simple delimited string attribute instead. 
+Search/Title Filtering: Implemented a case-insensitive search functionality that allows users to filter tasks by matching keywords within either the title or the tags field.
 
-Reviewing the code manually ensured that data validation layers correctly rejected empty entries, ensuring clean database integrity. This workflow effectively highlighted how an AI tool can execute complex logic while the developer maintains operational control.
+The "Small Loop" Experience
+Adopting the "Backend -> Test -> Frontend" loop significantly improved my development speed and code quality. By writing tests before finishing the implementation (such as test_tags_validation), I was able to identify that my tags were being saved with incorrect whitespace. I also caught the AttributeError caused by my initial folder structure early, which prevented these issues from compounding into larger, harder-to-debug problems later in the process.
+
+Challenges
+The most significant challenge was resolving import errors related to Python module resolution. My initial directory structure used folders for models and schemas instead of files, which prevented the application from finding the Task class. Standardizing the structure by moving these into dedicated .py files within the app/ directory and ensuring the correct use of absolute imports resolved these conflicts and stabilized the test environment.

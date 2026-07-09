@@ -1,8 +1,24 @@
-# Task Tracker Enterprise Workspace
+TaskTracker API
+A robust backend service for tracking tasks, featuring status filtering, keyword searching, and data validation.
 
-## How to Run the Backend (API)
-1. Ensure Python 3.12+ is installed.
-2. Install dependencies: `pip install fastapi uvicorn sqlalchemy`
-3. Start the Uvicorn server:
-   ```bash
-   uvicorn app.main:app --reload
+Features
+Status Filtering: Filter tasks by their current status (e.g., To Do, In Progress).
+
+Search Functionality: Perform case-insensitive searches across both title and tags fields.
+
+Data Sanitization: Automatically cleans and strips whitespace from task tags.
+
+Installation
+Clone the repository: git clone <https://github.com/sarighobar/TaskTracker-MidCourse>
+
+Navigate to the project folder: cd TaskTracker
+
+Install dependencies: pip install -r requirements.txt
+
+Running the API
+Start the FastAPI server:
+uvicorn app.main:app --reload
+
+Testing
+Run the test suite to verify all features:
+pytest

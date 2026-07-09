@@ -1,0 +1,1 @@
+"As a user, I want to filter tasks by status so that I can focus only on what needs to be done today."
