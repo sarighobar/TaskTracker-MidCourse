@@ -1,8 +1,13 @@
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import task  # Changed from tasks to task
+from fastapi.responses import HTMLResponse
+from app.routers import task
 from app.database import engine
-from app import models as task_model  
+from app import models as task_model
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+INDEX_PATH = BASE_DIR / "index.html"
 
 task_model.Base.metadata.create_all(bind=engine)
 
@@ -19,6 +24,6 @@ app.add_middleware(
 # Connects your route pathway to the app core
 app.include_router(task.router)
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def system_root_check():
-    return {"status": "Online", "engine": "FastAPI Structured Core"}
+    return INDEX_PATH.read_text(encoding="utf-8")

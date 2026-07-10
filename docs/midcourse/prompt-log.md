@@ -1,12 +1,17 @@
-# AI Prompt Log
+# Prompt Log
 
-## Feature 1: Tags / Labels
-* **Weak Prompt (Initial Idea):** "Make tags for my application."
-* **Strong Refactored Prompt:** "In `app/schemas/task.py`, create Pydantic schemas for `TaskCreate`, `TaskUpdate`, and `TaskResponse`. For the `tags` field, allow it to accept a string or null, but strip leading/trailing spaces if provided. Ensure the response schema includes the `id` and `status` fields."
-* **AI Return Summary:** The AI returned a fully functional Pydantic validator snippet utilizing python strings split and list-comprehensions to normalize spaces.
-* **Human Decision:** Accepted completely. It prevents broken empty tags or trailing space errors elegantly.
+## Feature 1: Task status update workflow
+- Weak prompt: "Make tasks updateable."
+- Stronger prompt: "Add a FastAPI PUT endpoint for tasks that accepts a partial task payload and updates only the provided fields, then return the updated task."
+- AI response summary: The AI proposed a basic update route and suggested using a partial schema.
+- Human decision: Accepted the route structure, but I refined it to use a dedicated TaskUpdate schema and kept the change narrow.
 
-## Feature 2: Search + Combined Filters
-* **Prompt Used:** "In `app/routers/task.py`, create the FastAPI APIRouter handling CRUD operations for our Tasks. Crucially, for `GET /tasks`, implement an optional `search` query parameter. If `search` is provided, use SQLAlchemy to filter tasks whose `title`, `description`, or `tags` contain that search string (case-insensitive partial matching)."
-* **AI Return Summary:** Provided a route using `.ilike()` statements combined with the OR bitwise pipe operator (`|`).
-* **Human Decision:** Accepted. Case-insensitive checking across all fields simultaneously meets our single search bar constraints perfectly.
+## Feature 2: Search, priority, and overdue filtering
+- Prompt: "Extend GET /tasks/ so it supports search, priority_filter, and overdue_only parameters and filters tasks in the database accordingly."
+- AI response summary: The AI returned SQLAlchemy query logic that handled the parameters cleanly.
+- Human decision: Accepted with one change: I made overdue filtering compare due_date against today using a date object rather than a string comparison.
+
+## Feature 3: Frontend compatibility
+- Prompt: "Make the frontend page work when it is served from the FastAPI app instead of relying on a separate local file open."
+- AI response summary: The AI suggested serving the index.html from the root endpoint and switching the browser API URL to the current host.
+- Human decision: Accepted and kept the fix minimal to preserve the existing UI behavior.

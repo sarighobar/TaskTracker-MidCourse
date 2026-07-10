@@ -13,8 +13,18 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     pass
 
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    tags: Optional[str] = None
+    due_date: Optional[date] = None
+
+
 class Task(TaskBase):
     id: int
     assignee: Optional[str] = "Unassigned"
-    
+
     model_config = ConfigDict(from_attributes=True)

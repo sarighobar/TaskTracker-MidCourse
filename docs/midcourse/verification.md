@@ -1,14 +1,28 @@
-# Verification Evidence Log
+# Verification
 
-## 1. Automated Backend Test Check
-* **Command Executed:** `python -m pytest tests/test_features.py`
-* **Result Matrix:** * `test_create_task_with_tags` -> PASSED
-    * `test_tags_validation_whitespace` -> PASSED
-    * `test_search_filter_by_title` -> PASSED
-    * `test_search_filter_by_tag` -> PASSED
-* **Status:** 4 Passed (100% Green Success).
+## Baseline
+- Before the final refactor, the app loaded the UI page but task creation failed because the frontend was calling a mismatched endpoint and the backend did not yet support the board’s update/filter behavior.
 
-## 2. Manual Browser Contract Checks
-* **Step A:** Navigated to `http://127.0.0.1:8000/docs` and verified the openAPI spec lists the optional `search` parameter on the GET route.
-* **Step B:** Opened `index.html` locally. Added a task with the tag "Urgent". The tag displayed as a styled block chip element successfully.
-* **Step C (Break Test):** Typed random string parameters into the search filter ("XYZ123"). The task list became empty as expected, but the structural Kanban columns remained visible and unbroken.
+## Backend test results
+- Command executed: `python -m pytest -q`
+- Result: 11 passed, 2 warnings
+- Key tests covered:
+  - task creation with tags
+  - tag whitespace normalization
+  - search by title and tag
+  - root page delivery
+  - task status updates
+  - priority and overdue filtering
+
+## Manual browser checks
+- Opened `http://127.0.0.1:8000/` and confirmed the Task Tracker workspace loaded.
+- Created a task through the UI and verified it appeared in the board after refresh.
+- Used the search, priority, and overdue filters to confirm the task list changed as expected.
+
+## Behavior contract before and after
+- Before: the UI could not reliably save tasks through the API and the backend lacked support for status updates and overdue filtering.
+- After: the UI can create, list, filter, and update tasks through the FastAPI backend.
+
+## Break test evidence
+- A break test was performed by sending an unsupported or empty search term. The list returned no matches while the board structure remained intact.
+- A second break test was performed by updating a task to Done and confirming the API returned the updated status value.

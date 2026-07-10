@@ -14,7 +14,7 @@
 <body class="text-gray-800 antialiased">
 
     <div class="flex min-h-screen">
-        <aside class="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between">
+        <aside class="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between shrink-0">
             <div>
                 <div class="flex items-center gap-2 mb-8">
                     <div class="p-2 bg-cyan-600 rounded-lg text-white font-bold text-sm">TT</div>
@@ -29,11 +29,13 @@
             <div class="text-xs text-gray-400 font-medium">v2.1.0 Enterprise Core</div>
         </aside>
 
-        <main class="flex-1 p-8">
+        <main class="flex-1 p-6 lg:p-8 min-w-0">
             <header class="mb-8">
                 <div class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Engineering / Product Development</div>
                 <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Sprint Workspace</h1>
             </header>
+
+            <div id="statusMessage" class="hidden mb-4 rounded-xl border px-4 py-3 text-sm"></div>
 
             <section class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-8">
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-3 items-center">
@@ -65,7 +67,7 @@
                     </div>
                 </div>
                 <div class="mt-4 flex justify-end">
-                    <button onclick="createTrackerTask()" class="bg-cyan-700 hover:bg-cyan-800 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition-all shadow-sm shadow-cyan-700/10">
+                    <button id="createTaskButton" onclick="createTrackerTask()" class="bg-cyan-700 hover:bg-cyan-800 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition-all shadow-sm shadow-cyan-700/10 disabled:opacity-60 disabled:cursor-not-allowed">
                         Create Task
                     </button>
                 </div>
@@ -100,17 +102,52 @@
             </div>
         </main>
 
-        <aside class="w-72 bg-gray-100/60 border-l border-gray-200 p-4 hidden xl:flex flex-col">
-            <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200/80">
-                <span class="w-1.5 h-1.5 rounded-full bg-cyan-600"></span>
-                <h3 class="font-bold text-xs uppercase tracking-wider text-cyan-900">Activity Log</h3>
-            </div>
-            <div id="activityLogStream" class="space-y-2 overflow-y-auto max-h-[85vh] pr-1"></div>
-        </aside>
     </div>
 
     <script>
-        const API = "http://127.0.0.1:8000/tasks";
+        let isSubmitting = false;
+
+        const API = 'http://127.0.0.1:8000/tasks';
+
+        function getApiUrl(path = "") {
+            return 'http://127.0.0.1:8000/tasks';
+        }
+
+        function getTaskUrl(taskId) {
+            return `http://127.0.0.1:8000/tasks/${taskId}`;
+        }
+
+        function showStatus(message, type = 'success') {
+            const banner = document.getElementById('statusMessage');
+            const baseClasses = 'border px-4 py-3 rounded-xl text-sm';
+            if (type === 'error') {
+                banner.className = `${baseClasses} border-red-200 bg-red-50 text-red-700`;
+            } else {
+                banner.className = `${baseClasses} border-cyan-200 bg-cyan-50 text-cyan-700`;
+            }
+            banner.innerText = message;
+            banner.classList.remove('hidden');
+        }
+
+        function hideStatus() {
+            const banner = document.getElementById('statusMessage');
+            banner.classList.add('hidden');
+            banner.innerText = '';
+        }
+
+        function setSubmitState(submitting) {
+            const button = document.getElementById('createTaskButton');
+            isSubmitting = submitting;
+            button.disabled = submitting;
+            button.innerText = submitting ? 'Creating...' : 'Create Task';
+        }
+
+        function renderEmptyState() {
+            const emptyMessage = '<div class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 text-center text-xs text-gray-500">No tasks in this lane yet.</div>';
+            document.getElementById('col-todo').insertAdjacentHTML('beforeend', emptyMessage);
+            document.getElementById('col-progress').insertAdjacentHTML('beforeend', emptyMessage);
+            document.getElementById('col-done').insertAdjacentHTML('beforeend', emptyMessage);
+        }
 
         async function fetchDashboard() {
             try {
@@ -122,7 +159,7 @@
                 if (search) queryUrl += `&search=${encodeURIComponent(search)}`;
                 if (priority) queryUrl += `&priority_filter=${encodeURIComponent(priority)}`;
 
-                const res = await fetch(queryUrl);
+                const res = await fetch(queryUrl, { cache: 'no-store' });
                 const tasks = await res.json();
 
                 document.getElementById('col-todo').innerHTML = '';
@@ -151,7 +188,10 @@
                 document.getElementById('count-progress').innerText = counts.progress;
                 document.getElementById('count-done').innerText = counts.done;
 
-                fetchActivityLogs();
+                if (tasks.length === 0) {
+                    renderEmptyState();
+                }
+
             } catch (err) {
                 console.error("Dashboard synchronization error:", err);
             }
@@ -209,6 +249,8 @@
         }
 
         async function createTrackerTask() {
+            if (isSubmitting) return;
+
             const titleValue = document.getElementById('taskTitle').value.trim();
             const description = document.getElementById('taskDesc').value.trim();
             const tags = document.getElementById('taskTags').value.trim();
@@ -230,24 +272,33 @@
                 due_date: due_date || null
             };
 
+            setSubmitState(true);
+            hideStatus();
+
             try {
-                const res = await fetch(`${API}`, {
+                const res = await fetch(getApiUrl(''), {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(taskPayload)
                 });
 
-                if (!res.ok) throw new Error("API responded with an execution failure state.");
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(errorText || "API responded with an execution failure state.");
+                }
 
                 document.getElementById('taskTitle').value = '';
                 document.getElementById('taskDesc').value = '';
                 document.getElementById('taskTags').value = '';
                 document.getElementById('taskDueDate').value = '';
                 
+                showStatus('Task created successfully.');
                 fetchDashboard();
             } catch (err) {
                 console.error("Task injection failure:", err);
-                alert("Could not save task. Ensure your FastAPI server is running on port 8000.");
+                showStatus(`Could not save task. ${err.message}`, 'error');
+            } finally {
+                setSubmitState(false);
             }
         }
 
@@ -258,12 +309,13 @@
             }
 
             try {
-                const res = await fetch(`${API}/${id}`, {
+                const res = await fetch(getTaskUrl(id), {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ status: nextStatus })
                 });
                 if (!res.ok) throw new Error("Status transformation rejection.");
+                showStatus(`Task moved to ${nextStatus}.`);
                 fetchDashboard();
             } catch (err) {
                 console.error("Task lifecycle adjustment trace crash:", err);
@@ -273,35 +325,12 @@
         async function purgeTaskNode(id) {
             if (!confirm("Are you sure you want to permanently delete this task record?")) return;
             try {
-                const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+                const res = await fetch(getTaskUrl(id), { method: 'DELETE' });
                 if (!res.ok) throw new Error("Purge endpoint validation error occurred.");
+                showStatus('Task deleted.');
                 fetchDashboard();
             } catch (err) {
                 console.error("Task purge execution failure trace:", err);
-            }
-        }
-
-        async function fetchActivityLogs() {
-            try {
-                const res = await fetch(`${API}/global/activity`);
-                const logs = await res.json();
-                const container = document.getElementById('activityLogStream');
-                container.innerHTML = '';
-
-                logs.forEach(log => {
-                    const block = document.createElement('div');
-                    block.className = "p-3 bg-white border border-gray-200 rounded-xl text-xs shadow-sm space-y-1";
-                    block.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <span class="font-bold text-[10px] text-cyan-700 uppercase tracking-wide">${log.action}</span>
-                            <span class="text-[10px] text-gray-400 font-medium">${log.timestamp.split(' ')[1] || log.timestamp}</span>
-                        </div>
-                        <p class="text-gray-600 text-[11px] leading-normal font-medium">${log.details}</p>
-                    `;
-                    container.appendChild(block);
-                });
-            } catch (err) {
-                console.error("Failed to sync activity logger streams:", err);
             }
         }
 

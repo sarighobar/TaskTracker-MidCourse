@@ -1,12 +1,7 @@
-Goal
-In this project, I implemented two primary features to enhance the TaskTracker API:
+# Reflection
 
-Status Filtering: Added the ability to filter tasks by their current status (e.g., To Do, Done) via query parameters.
+I used the FastAPI docs, the local test suite, and the browser-based UI as my main tools during this project. The backend tests helped me verify the API contract quickly, while the browser made it obvious when the page and the API were not aligned. One moment where AI helped a lot was when I needed to connect the UI to the backend without rewriting the frontend from scratch; it suggested a small change that made the API URL follow the current host and solved the connection issue cleanly.
 
-Search/Title Filtering: Implemented a case-insensitive search functionality that allows users to filter tasks by matching keywords within either the title or the tags field.
+One moment where AI slowed me down was when it suggested a larger architectural change for task updates and filtering. That would have expanded the scope beyond the course goal, so I reviewed the suggestion carefully and kept the implementation small and focused. My own review changed the result in another important way: I noticed that the root route had to serve the UI HTML directly, not just return a JSON status message, because the browser was expecting a real page. That correction made the app work as a complete experience rather than as a disconnected API.
 
-The "Small Loop" Experience
-Adopting the "Backend -> Test -> Frontend" loop significantly improved my development speed and code quality. By writing tests before finishing the implementation (such as test_tags_validation), I was able to identify that my tags were being saved with incorrect whitespace. I also caught the AttributeError caused by my initial folder structure early, which prevented these issues from compounding into larger, harder-to-debug problems later in the process.
-
-Challenges
-The most significant challenge was resolving import errors related to Python module resolution. My initial directory structure used folders for models and schemas instead of files, which prevented the application from finding the Task class. Standardizing the structure by moving these into dedicated .py files within the app/ directory and ensuring the correct use of absolute imports resolved these conflicts and stabilized the test environment.
+The most useful part of the process was the small loop of backend change, test, and frontend check. It helped me keep the implementation practical and avoid overbuilding. The final app is simpler, easier to reason about, and verified by tests and manual checks.
