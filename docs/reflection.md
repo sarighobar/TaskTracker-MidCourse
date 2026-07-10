@@ -1,0 +1,7 @@
+# Reflection
+
+I used the FastAPI documentation, the local pytest suite, and the browser-based UI as my main tools during this project. The backend tests gave me a quick way to confirm the API contract, while the browser made it clear when the page and the server were out of sync. One moment where AI helped a lot was when I needed to connect the UI to the backend without rewriting the frontend from scratch; it suggested a small change that made the browser call the current host correctly and solved the initial integration issue.
+
+One moment where AI slowed me down was when it proposed a more ambitious architecture for task updates and filtering than the scope of the course required. I reviewed that suggestion carefully and kept the implementation narrow so it remained understandable and testable. My own review changed the outcome in another important way: I noticed that the root route had to serve the actual HTML page instead of a simple JSON response, because the browser expected a complete UI rather than only an API endpoint. That correction made the app feel like a working product rather than a disconnected backend.
+
+The most useful part of the process was the small loop of backend change, test, and frontend check. It helped me keep the solution practical, avoid overbuilding, and verify the behavior before moving on. The final result is simpler to reason about and is backed by both automated tests and manual browser checks.
