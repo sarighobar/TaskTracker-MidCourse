@@ -37,3 +37,10 @@ TaskTracker/
 │
 └── tests/
     └── test_tasks.py        # Automated test suite
+
+    -- Use this command to reload/luanch the FE app:
+
+    python -m uvicorn app.main:app --reload
+
+    http://127.0.0.1:8000
+    http://127.0.0.1:8000/docs
