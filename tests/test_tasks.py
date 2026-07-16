@@ -1,42 +1,41 @@
-import pytest
+from fastapi.testclient import TestClient
+from app.main import app
 
-def test_create_task(client):
-    response = client.post("/tasks/", json={"title": "Test Task", "status": "To Do", "priority": "High"})
+client = TestClient(app)
+
+def test_create_task_with_trimmed_tags():
+    # Test 1: Verifies tags are automatically trimmed of extra spaces
+    response = client.post("/tasks", json={
+        "title": "Fix dashboard layout",
+        "tags": " ui , bug, frontend "
+    })
     assert response.status_code == 201
-    assert response.json()["title"] == "Test Task"
+    assert response.json()["tags"] == "ui,bug,frontend"
 
-def test_delete_task(client):
-    # Create a task to delete
-    response = client.post("/tasks/", json={"title": "To Delete", "status": "To Do", "priority": "Low"})
-    task_id = response.json()["id"]
+def test_search_tasks_filter():
+    # Test 2: Verifies search matches titles and description
+    client.post("/tasks", json={"title": "Write Odoo report"})
+    client.post("/tasks", json={"title": "Walk the dog"})
     
-    # Delete it
-    delete_response = client.delete(f"/tasks/{task_id}")
-    assert delete_response.status_code == 200
-    
-    # Verify it's gone
-    get_response = client.get("/tasks/")
-    assert len(get_response.json()) == 0
-
-def test_filter_by_status(client):
-    """Verify that filtering by status returns only relevant tasks."""
-    client.post("/tasks/", json={"title": "Work", "status": "To Do", "priority": "High"})
-    client.post("/tasks/", json={"title": "Relax", "status": "Done", "priority": "Low"})
-    
-    # Filter for Done
-    response = client.get("/tasks/?status=Done")
+    response = client.get("/tasks?search=Odoo")
     assert response.status_code == 200
-    data = response.json()
-    
-    assert len(data) == 1
-    assert data[0]["status"] == "Done"
-    assert data[0]["title"] == "Relax"
+    assert len(response.json()) == 1
+    assert response.json()[0]["title"] == "Write Odoo report"
 
-def test_get_all_tasks_no_filter(client):
-    """Verify that without a filter, all tasks are returned."""
-    client.post("/tasks/", json={"title": "Task A", "status": "To Do", "priority": "High"})
-    client.post("/tasks/", json={"title": "Task B", "status": "Done", "priority": "Low"})
+def test_filter_by_tag():
+    # Test 3: Verifies filtering by tag returns matching items only
+    client.post("/tasks", json={"title": "API Auth", "tags": "security"})
+    client.post("/tasks", json={"title": "CSS color tweak", "tags": "style"})
     
-    response = client.get("/tasks/")
+    response = client.get("/tasks?tag=security")
     assert response.status_code == 200
-    assert len(response.json()) == 2
+    assert len(response.json()) == 1
+    assert response.json()[0]["title"] == "API Auth"
+
+def test_invalid_status_transition_returns_422():
+    # Test 4: Verifies we cannot jump directly from ToDo to Done
+    create_res = client.post("/tasks", json={"title": "Validation test"})
+    task_id = create_res.json()["id"]
+    
+    update_res = client.patch(f"/tasks/{task_id}", json={"status": "Done"})
+    assert update_res.status_code == 422

@@ -1,7 +1,0 @@
-# Reflection
-
-I used the FastAPI docs, the local test suite, and the browser-based UI as my main tools during this project. The backend tests helped me verify the API contract quickly, while the browser made it obvious when the page and the API were not aligned. One moment where AI helped a lot was when I needed to connect the UI to the backend without rewriting the frontend from scratch; it suggested a small change that made the API URL follow the current host and solved the connection issue cleanly.
-
-One moment where AI slowed me down was when it suggested a larger architectural change for task updates and filtering. That would have expanded the scope beyond the course goal, so I reviewed the suggestion carefully and kept the implementation small and focused. My own review changed the result in another important way: I noticed that the root route had to serve the UI HTML directly, not just return a JSON status message, because the browser was expecting a real page. That correction made the app work as a complete experience rather than as a disconnected API.
-
-The most useful part of the process was the small loop of backend change, test, and frontend check. It helped me keep the implementation practical and avoid overbuilding. The final app is simpler, easier to reason about, and verified by tests and manual checks.

@@ -1,23 +1,19 @@
 # User Stories
 
-## Feature 1: Task workflow and status updates
-1. As a project lead, I want to move a task from To Do to Done, so that I can reflect progress in the board.
-   - Acceptance criteria: a task can be updated through the API, the status changes in storage, and the updated value is returned in the response.
-   - AI assumption corrected: I initially assumed the frontend would only read tasks, but the board also needs a writable update route.
+## Feature 1: Tags and Labels (Category Tracking)
+1. **As a developer**, I want to add tags (e.g., "bug", "frontend") to a task when creating it, so that I can categorize and group my work.
+   - **Acceptance Criteria**: The `POST /tasks` payload accepts a `tags` string. The backend parses, trims whitespace, filters empty strings, and stores them as a clean, comma-separated string.
+   - **AI Assumption Corrected**: The AI assumed we should allow blank tag inputs. I rejected this and added a Pydantic `@field_validator` to strip duplicate commas and outer whitespace (e.g., converting `" ui , , bug "` to `"ui,bug"`).
 
-2. As a team member, I want to filter tasks by their current status, so that I can focus on the work that matters right now.
-   - Acceptance criteria: calling GET /tasks/ with a status query returns only tasks matching that status.
-   - AI assumption corrected: I corrected the assumption that status filter support already existed in the router.
+2. **As a team lead**, I want to filter the board by a specific tag using a query parameter, so that I can see only the tasks related to a specific feature or domain.
+   - **Acceptance Criteria**: Sending a `GET /tasks?tag=bug` request returns only the tasks where "bug" is present in the database `tags` column.
+   - **AI Assumption Corrected**: The AI assumed we needed a complex relational many-to-many junction table, but I corrected it to use a clean SQLite `LIKE` filter on a comma-separated string column for simplicity.
 
-## Feature 2: Search, priority, and overdue filtering
-3. As a product owner, I want to search tasks by keyword, so that I can find relevant work quickly.
-   - Acceptance criteria: a search term matches task titles or tags case-insensitively and returns only matching tasks.
-   - AI assumption corrected: I corrected the plan to search title-only and expanded it to title and tags.
+## Feature 2: Search and Combined Filters
+3. **As a project manager**, I want to search for tasks using a search bar, so that I can find a specific task without scrolling through columns.
+   - **Acceptance Criteria**: Sending a `GET /tasks?search=database` matches the term "database" case-insensitively across both the task `title` and `description` columns.
+   - **AI Assumption Corrected**: The AI's initial search query only filtered by task title. I refined this to search both `title` and `description` to prevent missing relevant items.
 
-4. As a manager, I want to filter tasks by priority and overdue date, so that I can identify urgent work.
-   - Acceptance criteria: GET /tasks/ accepts priority_filter and overdue_only parameters and returns the expected subset.
-   - AI assumption corrected: I corrected the earlier assumption that the UI only needed a simple search bar and not backend support for the board filters.
-
-5. As a user, I want to create tasks with tags and due dates, so that I can keep context and deadlines in one place.
-   - Acceptance criteria: task creation accepts tags and due_date fields, and the values are persisted correctly.
-   - AI assumption corrected: I corrected the assumption that tags were purely cosmetic and not part of the data contract.
+4. **As a Kanban user**, I want my search filters and tag filters to combine dynamically, so that I can narrow down my search to highly specific tasks.
+   - **Acceptance Criteria**: Performing `GET /tasks?search=auth&tag=security` successfully applies both database query constraints.
+   - **AI Assumption Corrected**: The AI wrote separate endpoints for searching vs. tag filtering. I refactored them into a single, unified `GET /tasks` endpoint with multiple optional query parameters.

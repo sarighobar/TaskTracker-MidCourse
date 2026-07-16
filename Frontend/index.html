@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Task Tracker</title>
+    <style>
+        :root {
+            --todo-color: #f1c40f;
+            --inprogress-color: #3498db;
+            --done-color: #2ecc71;
+            --bg-color: #f5f6fa;
+            --card-bg: #ffffff;
+            --text-color: #2f3640;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            padding: 10px 15px;
+            border: 1px solid #dcdde1;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 250px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4b0082;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #320056;
+        }
+
+        /* Board Layout */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .column {
+            background-color: #edf2f7;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .column-header {
+            font-weight: bold;
+            font-size: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #cbd5e0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Task Cards */
+        .task-card {
+            background: var(--card-bg);
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        .task-card:active {
+            cursor: grabbing;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .task-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .priority-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .priority-high { background-color: #fed7d7; color: #9b2c2c; }
+        .priority-medium { background-color: #feebc8; color: #9c4221; }
+        .priority-low { background-color: #e2e8f0; color: #4a5568; }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tag-chip {
+            background-color: #e2e8f0;
+            color: #4a5568;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Modal styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e0;
+        }
+
+        .error-banner {
+            color: #e53e3e;
+            font-size: 13px;
+            margin-bottom: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>My Kanban Task Tracker</h1>
+        <div class="controls">
+            <input type="text" id="search-input" placeholder="Search tasks..." oninput="fetchTasks()">
+            <button onclick="openModal()">+ Add Task</button>
+        </div>
+    </header>
+
+    <main class="board">
+        <div class="column" id="column-ToDo" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'ToDo')">
+            <div class="column-header">To Do <span id="count-ToDo">0</span></div>
+            <div class="cards-container" id="container-ToDo"></div>
+        </div>
+
+        <div class="column" id="column-InProgress" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'InProgress')">
+            <div class="column-header">In Progress <span id="count-InProgress">0</span></div>
+            <div class="cards-container" id="container-InProgress"></div>
+        </div>
+
+        <div class="column" id="column-Done" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'Done')">
+            <div class="column-header">Done <span id="count-Done">0</span></div>
+            <div class="cards-container" id="container-Done"></div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
+        <div class="modal">
+            <h2 id="modal-title">Create Task</h2>
+            <div class="error-banner" id="error-banner"></div>
+            <form id="task-form" onsubmit="saveTask(event)">
+                <input type="hidden" id="task-id">
+                
+                <div class="form-group">
+                    <label for="form-title">Title *</label>
+                    <input type="text" id="form-title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="form-desc">Description</label>
+                    <textarea id="form-desc" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="form-priority">Priority</label>
+                    <select id="form-priority">
+                        <option value="High">High</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="form-assignee">Assignee</label>
+                    <input type="text" id="form-assignee">
+                </div>
+
+                <div class="form-group">
+                    <label for="form-tags">Tags (comma-separated)</label>
+                    <input type="text" id="form-tags" placeholder="e.g. bug, UI, frontend">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8000";
+        const PRIORITY_ORDER = { "High": 0, "Medium": 1, "Low": 2 };
+
+        // 1. Fetch & Render Board
+        async function fetchTasks() {
+            const searchQuery = document.getElementById('search-input').value.trim();
+            let url = `${API_BASE}/tasks`;
+            if (searchQuery) {
+                url += `?search=${encodeURIComponent(searchQuery)}`;
+            }
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Could not load tasks");
+                const tasks = await response.json();
+                renderBoard(tasks);
+            } catch (err) {
+                console.error(err);
+                alert("Error loading tasks. Is the backend running?");
+            }
+        }
+
+        function renderBoard(tasks) {
+            const containers = {
+                "ToDo": document.getElementById('container-ToDo'),
+                "InProgress": document.getElementById('container-InProgress'),
+                "Done": document.getElementById('container-Done')
+            };
+
+            const counts = { "ToDo": 0, "InProgress": 0, "Done": 0 };
+
+            // Clear old cards
+            Object.values(containers).forEach(container => container.innerHTML = "");
+
+            // Sort tasks by Priority: High -> Medium -> Low (per instructions)
+            tasks.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || a.id - b.id);
+
+            tasks.forEach(task => {
+                if (containers[task.status]) {
+                    counts[task.status]++;
+                    const card = createTaskCardElement(task);
+                    containers[task.status].appendChild(card);
+                }
+            });
+
+            // Update Counts
+            document.getElementById('count-ToDo').innerText = counts["ToDo"];
+            document.getElementById('count-InProgress').innerText = counts["InProgress"];
+            document.getElementById('count-Done').innerText = counts["Done"];
+        }
+
+        function createTaskCardElement(task) {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.draggable = true;
+            card.id = `task-${task.id}`;
+            card.ondragstart = (e) => e.dataTransfer.setData("text/plain", task.id);
+
+            // Create tag elements
+            let tagsHTML = "";
+            if (task.tags) {
+                const tagList = task.tags.split(",");
+                tagsHTML = `<div class="tags-container">` + 
+                    tagList.map(t => `<span class="tag-chip">#${t}</span>`).join("") + 
+                    `</div>`;
+            }
+
+            card.innerHTML = `
+                <div class="task-header">
+                    <h3 class="task-title">${task.title}</h3>
+                    <span class="priority-badge priority-${task.priority.toLowerCase()}">${task.priority}</span>
+                </div>
+                <p style="margin: 0; font-size: 13px; color: #718096;">${task.description || ""}</p>
+                ${tagsHTML}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                    <span style="font-size: 11px; color: #a0aec0;">Assignee: ${task.assignee || "Unassigned"}</span>
+                    <button onclick="openEditModal(${JSON.stringify(task).replace(/"/g, '&quot;')})" style="padding: 4px 8px; font-size: 11px;">Edit</button>
+                </div>
+            `;
+            return card;
+        }
+
+        // 2. Drag & Drop Actions
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        async function handleDrop(ev, targetStatus) {
+            ev.preventDefault();
+            const taskId = ev.dataTransfer.getData("text/plain");
+            if (!taskId) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: targetStatus })
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    alert(`Transition Rejected: ${errorData.detail || "Invalid Move"}`);
+                    fetchTasks(); // Revert UI
+                } else {
+                    fetchTasks(); // Reload board on successful move
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error. Could not save status.");
+                fetchTasks();
+            }
+        }
+
+        // 3. Modal Actions
+        function openModal() {
+            document.getElementById('task-id').value = "";
+            document.getElementById('task-form').reset();
+            document.getElementById('modal-title').innerText = "Create Task";
+            document.getElementById('error-banner').style.display = "none";
+            document.getElementById('modal-overlay').style.display = "flex";
+        }
+
+        function openEditModal(task) {
+            document.getElementById('task-id').value = task.id;
+            document.getElementById('form-title').value = task.title;
+            document.getElementById('form-desc').value = task.description || "";
+            document.getElementById('form-priority').value = task.priority;
+            document.getElementById('form-assignee').value = task.assignee || "";
+            document.getElementById('form-tags').value = task.tags || "";
+            document.getElementById('modal-title').innerText = "Edit Task";
+            document.getElementById('error-banner').style.display = "none";
+            document.getElementById('modal-overlay').style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = "none";
+        }
+
+        function closeModalOnOverlay(e) {
+            if (e.target.id === 'modal-overlay') closeModal();
+        }
+
+        // Close on Escape key press
+        window.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") closeModal();
+        });
+
+        // 4. Save Task (POST/PATCH validation)
+        async function saveTask(e) {
+            e.preventDefault();
+            const id = document.getElementById('task-id').value;
+            const title = document.getElementById('form-title').value.trim(); // Satisfies Title trimming rule
+            const description = document.getElementById('form-desc').value;
+            const priority = document.getElementById('form-priority').value;
+            const assignee = document.getElementById('form-assignee').value;
+            const tags = document.getElementById('form-tags').value;
+
+            const payload = { title, description, priority, assignee, tags };
+
+            const url = id ? `${API_BASE}/tasks/${id}` : `${API_BASE}/tasks`;
+            const method = id ? 'PATCH' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errRes = await response.json();
+                    let errMsg = errRes.detail;
+                    if (Array.isArray(errMsg)) {
+                        errMsg = errMsg.map(e => e.msg).join(", ");
+                    }
+                    throw new Error(errMsg || "Failed to save task");
+                }
+
+                closeModal();
+                fetchTasks();
+            } catch (err) {
+                const errorBanner = document.getElementById('error-banner');
+                errorBanner.innerText = err.message;
+                errorBanner.style.display = "block";
+            }
+        }
+
+        // Initial Load
+        fetchTasks();
+    </script>
+</body>
+</html>
