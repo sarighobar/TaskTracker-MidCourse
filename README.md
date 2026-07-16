@@ -1,6 +1,6 @@
 # Task Tracker API
 
-A lightweight, enterprise-ready task-tracking workspace with a FastAPI backend and a Kanban-style frontend. The system allows users to create, view, filter, update, and delete tasks, while strictly validating workflow progressions across task statuses in the backend.
+A lightweight, enterprise-ready task-tracking workspace featuring a FastAPI backend and a Kanban-style frontend. The system allows users to create, view, filter, update, and delete tasks, while strictly validating workflow progressions across task statuses in the backend.
 
 ---
 
@@ -37,10 +37,3 @@ TaskTracker/
 │
 └── tests/
     └── test_tasks.py        # Automated test suite
-
-    -- Use this command to reload/luanch the FE app:
-
-    python -m uvicorn app.main:app --reload
-
-    http://127.0.0.1:8000
-    http://127.0.0.1:8000/docs
