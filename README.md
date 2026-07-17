@@ -1,39 +1,23 @@
-# Task Tracker API
+# Enterprise Task Tracker
 
-A lightweight, enterprise-ready task-tracking workspace featuring a FastAPI backend and a Kanban-style frontend. The system allows users to create, view, filter, update, and delete tasks, while strictly validating workflow progressions across task statuses in the backend.
-
----
+This project is a Kanban-based task management system developed for the mid-course project.
 
 ## Features
+1. **Kanban Workflow**: Drag-and-drop status transitions between To Do, In Progress, and Done.
+2. **Persistence Layer**: Integrated backend API and database for reliable data storage.
 
-* **Strict Workflow Validation**: Enforces valid status transitions (e.g., `ToDo` $\rightarrow$ `InProgress` $\rightarrow$ `Done`) directly in the database logic.
-* **Unified Text Search**: Live search matching keywords case-insensitively across both task titles and descriptions.
-* **Tags & Category Labels**: Supports organizing tasks with tag chips, including built-in backend validation to trim whitespace and clean up empty comma inputs.
-* **Direct UI Hosting**: The FastAPI app hosts the Single-Page Application (SPA) directly from the root URL.
-* **Robust Test Coverage**: Verified with a clean `pytest` integration test suite.
+## How to Run
 
----
+### Backend
+1. Navigate to the project root.
+2. Install requirements: `pip install -r requirements.txt`
+3. Start the server: `uvicorn app.main:app --reload`
 
-## Folder Structure
+### Frontend
+1. Navigate to the `frontend/` directory.
+2. Serve the site using Live Server (VS Code) or by running: `python -m http.server 8080`
+3. Access the dashboard at `http://localhost:8080`.
 
-```text
-TaskTracker/
-│
-├── app/                     # FastAPI Backend Implementation
-│   ├── business_rules.py    # Transition matrices & safety rules
-│   ├── database.py          # SQLAlchemy SQLite connection setup
-│   ├── main.py              # Application routers and frontend delivery
-│   ├── models.py            # SQLite declarative database schemas
-│   └── schemas.py           # Pydantic payloads & validators
-│
-├── docs/midcourse/          # Project documentation deliverables
-│   ├── mini-adr.md          # Architectural decisions
-│   ├── prompt-log.md        # AI Loop prompt logs
-│   ├── user-stories.md      # Features and acceptance criteria
-│   └── verification.md      # Testing and break test evidence
-│
-├── frontend/
-│   └── index.html           # Kanban Drag-and-Drop Board UI
-│
-└── tests/
-    └── test_tasks.py        # Automated test suite
+### Testing
+- Ensure you are in the root directory.
+- Run the full test suite: `pytest`
