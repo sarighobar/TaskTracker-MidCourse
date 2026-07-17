@@ -1,13 +1,10 @@
-# Ignore local SQLite databases
+# Databases
 *.db
-*.db-journal
 *.sqlite3
 
-# Ignore Python cache files
+# Python caches
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
+
+# Pytest cache
 .pytest_cache/
-.venv/
-venv/

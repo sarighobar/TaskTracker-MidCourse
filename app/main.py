@@ -1,102 +1,103 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Query
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from pathlib import Path
-from app.database import engine, Base, get_db
-from app import models, schemas
-from app.business_rules import validate_status_transition
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, field_validator
+from typing import Optional
 
-# Create SQLite DB tables on startup
-Base.metadata.create_all(bind=engine)
+app = FastAPI()
 
-app = FastAPI(title="Task Tracker Enterprise API")
-
-# Setup CORS so the frontend can easily communicate with backend endpoints
+# Enable CORS for frontend workspace communication
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    CORSMiddleware, 
+    allow_origins=["*"], 
+    allow_methods=["*"], 
+    allow_headers=["*"]
 )
 
-# Resolve path to index.html inside the sibling "frontend" folder
-FRONTEND_PATH = Path(__file__).resolve().parent.parent / "frontend" / "index.html"
+tasks_db = []
+id_counter = 1
 
-@app.get("/", response_class=HTMLResponse)
-def read_root():
-    """Serves the frontend Kanban board directly at the root URL."""
-    if not FRONTEND_PATH.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="index.html not found in frontend/ directory"
-        )
-    return FRONTEND_PATH.read_text(encoding="utf-8")
+class Task(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    priority: Optional[str] = "Medium"
+    status: str = "ToDo"
+    tags: Optional[str] = ""
+    assignee: Optional[str] = ""
 
-@app.get("/health")
-def health_check():
-    """Simple health check endpoint."""
-    return {"status": "ok"}
+    @field_validator("title")
+    def title_must_not_be_empty(cls, v):
+        if not v or v.strip() == "":
+            raise ValueError("Title cannot be empty")
+        return v
 
-@app.get("/tasks", response_model=List[schemas.TaskResponse])
-def get_tasks(
-    search: Optional[str] = Query(None, description="Search by title or description"),
-    tag: Optional[str] = Query(None, description="Filter tasks by tag"),
-    db: Session = Depends(get_db)
-):
-    """Fetches tasks from the database with optional search and tag filters."""
-    query = db.query(models.Task)
+    @field_validator("tags")
+    def normalize_tags(cls, v):
+        if not v: 
+            return ""
+        # Strip trailing whitespaces around comma-separated tags
+        return ",".join([tag.strip() for tag in v.split(",") if tag.strip()])
+
+
+@app.get("/")
+async def read_index():
+    return FileResponse("Frontend/index.html")
+
+
+@app.post("/api/tasks/", status_code=status.HTTP_201_CREATED)
+async def create_task(task: Task):
+    global id_counter
+    task_data = task.model_dump()
+    task_data["id"] = id_counter
+    tasks_db.append(task_data)
+    id_counter += 1
+    return task_data
+
+
+# UPDATED: Implements ADR 001 optional status filtering parameter
+@app.get("/api/tasks/")
+async def get_tasks(status: Optional[str] = None):
+    if status:
+        return [t for t in tasks_db if t["status"] == status]
+    return tasks_db
+
+
+@app.get("/api/tasks/{task_id}")
+async def get_single_task(task_id: int):
+    for t in tasks_db:
+        if t["id"] == task_id:
+            return t
+    raise HTTPException(status_code=404, detail="Task not found")
+
+
+@app.put("/api/tasks/{task_id}")
+async def update_task(task_id: int, task_update: dict):
+    for t in tasks_db:
+        if t["id"] == task_id:
+            t.update(task_update)
+            return t
+    raise HTTPException(status_code=404, detail="Task not found")
+
+
+@app.patch("/api/tasks/{task_id}/status")
+async def update_status(task_id: int, update: dict):
+    valid_statuses = ["ToDo", "InProgress", "Done"]
+    new_status = update.get("status")
     
-    # 1. Text search across both Title & Description
-    if search:
-        query = query.filter(
-            (models.Task.title.ilike(f"%{search}%")) | 
-            (models.Task.description.ilike(f"%{search}%"))
-        )
-    
-    # 2. Tag Filter (Matches if tag is present inside comma-separated string)
-    if tag:
-        query = query.filter(models.Task.tags.ilike(f"%{tag}%"))
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid status")
         
-    return query.all()
+    for t in tasks_db:
+        if t["id"] == task_id:
+            t["status"] = new_status
+            return t
+    raise HTTPException(status_code=404, detail="Task not found")
 
-@app.post("/tasks", response_model=schemas.TaskResponse, status_code=status.HTTP_201_CREATED)
-def create_task(payload: schemas.TaskCreate, db: Session = Depends(get_db)):
-    """Creates a new task with validated schemas and tags."""
-    new_task = models.Task(**payload.model_dump())
-    db.add(new_task)
-    db.commit()
-    db.refresh(new_task)
-    return new_task
 
-@app.patch("/tasks/{task_id}", response_model=schemas.TaskResponse)
-def update_task(task_id: int, payload: schemas.TaskUpdate, db: Session = Depends(get_db)):
-    """Updates selected attributes of a task and checks state transition rules."""
-    task = db.query(models.Task).filter(models.Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
-    
-    update_data = payload.model_dump(exclude_unset=True)
-    
-    # Validate transition rule if status is being updated
-    if "status" in update_data:
-        validate_status_transition(task.status, update_data["status"])
-        
-    for key, val in update_data.items():
-        setattr(task, key, val)
-        
-    db.commit()
-    db.refresh(task)
-    return task
-
-@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(task_id: int, db: Session = Depends(get_db)):
-    """Deletes a task from the board database."""
-    task = db.query(models.Task).filter(models.Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
-    db.delete(task)
-    db.commit()
-    return {"detail": "Task deleted"}
+@app.delete("/api/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_task(task_id: int):
+    for i, t in enumerate(tasks_db):
+        if t["id"] == task_id:
+            tasks_db.pop(i)
+            return None
+    raise HTTPException(status_code=404, detail="Task not found")

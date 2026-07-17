@@ -2,469 +2,237 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Task Tracker</title>
+    <title>TaskTracker Pro // Workspace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --todo-color: #f1c40f;
-            --inprogress-color: #3498db;
-            --done-color: #2ecc71;
-            --bg-color: #f5f6fa;
-            --card-bg: #ffffff;
-            --text-color: #2f3640;
+        body { 
+            background: #f4f5f7; 
+            color: #172b4d; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        input[type="text"] {
-            padding: 10px 15px;
-            border: 1px solid #dcdde1;
-            border-radius: 6px;
-            font-size: 14px;
-            width: 250px;
-        }
-
-        button {
-            padding: 10px 20px;
-            background-color: #4b0082;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background-color: #320056;
-        }
-
-        /* Board Layout */
-        .board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            align-items: start;
-        }
-
-        .column {
-            background-color: #edf2f7;
-            border-radius: 8px;
-            padding: 15px;
-            min-height: 500px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .column-header {
-            font-weight: bold;
-            font-size: 18px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #cbd5e0;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* Task Cards */
-        .task-card {
-            background: var(--card-bg);
-            border-radius: 6px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            cursor: grab;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: relative;
-        }
-
-        .task-card:active {
-            cursor: grabbing;
-        }
-
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-        }
-
-        .task-title {
-            font-weight: bold;
-            font-size: 16px;
-            margin: 0;
-        }
-
-        .priority-badge {
+        .modal { display: none; }
+        
+        .priority-high { background: #ffebe6; color: #de350b; border: 1px solid #ffbdad; }
+        .priority-medium { background: #fffae6; color: #b68d00; border: 1px solid #fff0b3; }
+        .priority-low { background: #e3fcef; color: #006644; border: 1px solid #abf5d1; }
+        
+        .techy-delete { 
+            background: #ffffff;
+            color: #42526e;
+            border: 1px solid #dfe1e6;
+            padding: 4px 10px;
             font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .priority-high { background-color: #fed7d7; color: #9b2c2c; }
-        .priority-medium { background-color: #feebc8; color: #9c4221; }
-        .priority-low { background-color: #e2e8f0; color: #4a5568; }
-
-        .tags-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-
-        .tag-chip {
-            background-color: #e2e8f0;
-            color: #4a5568;
-            font-size: 11px;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        /* Modal styling */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .form-group label {
             font-weight: 600;
-            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 3px;
+            transition: all 0.15s ease-in-out;
+        }
+        .techy-delete:hover { 
+            background: #de350b; 
+            color: #ffffff; 
+            border-color: #de350b;
         }
 
-        .form-group input, .form-group textarea, .form-group select {
-            padding: 8px;
-            border: 1px solid #cbd5e0;
-            border-radius: 4px;
+        .task-card { 
+            background: #ffffff; 
+            border: 1px solid #dfe1e6; 
+            box-shadow: 0 1px 2px 0 rgba(9, 30, 66, 0.25); 
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .task-card:hover { 
+            border-color: #4c9aff; 
+            box-shadow: 0 4px 8px -2px rgba(9, 30, 66, 0.25); 
         }
 
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .btn-secondary {
-            background-color: #e2e8f0;
-            color: #4a5568;
-        }
-
-        .btn-secondary:hover {
-            background-color: #cbd5e0;
-        }
-
-        .error-banner {
-            color: #e53e3e;
+        .jira-search {
             font-size: 13px;
-            margin-bottom: 10px;
-            display: none;
+            background: #fafbfc;
+            border: 2px solid #dfe1e6;
+            color: #172b4d;
+            transition: all 0.15s ease-in-out;
+        }
+        .jira-search:focus {
+            background: #ffffff;
+            border-color: #0052cc;
+            outline: none;
         }
     </style>
 </head>
-<body>
-
-    <header>
-        <h1>My Kanban Task Tracker</h1>
-        <div class="controls">
-            <input type="text" id="search-input" placeholder="Search tasks..." oninput="fetchTasks()">
-            <button onclick="openModal()">+ Add Task</button>
+<body class="p-8">
+<div class="max-w-7xl mx-auto bg-white rounded-lg border border-[#dfe1e6] p-6 shadow-sm">
+    
+    <!-- Control Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-5 mb-6">
+        <div>
+            <h1 class="text-xl font-bold tracking-tight text-[#172b4d]">TaskTracker <span class="text-blue-600 font-extrabold">// Board</span></h1>
+            <p class="text-xs text-slate-500 font-semibold mt-0.5">Workflow: Forward Movement Restriction Enabled</p>
         </div>
-    </header>
-
-    <main class="board">
-        <div class="column" id="column-ToDo" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'ToDo')">
-            <div class="column-header">To Do <span id="count-ToDo">0</span></div>
-            <div class="cards-container" id="container-ToDo"></div>
-        </div>
-
-        <div class="column" id="column-InProgress" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'InProgress')">
-            <div class="column-header">In Progress <span id="count-InProgress">0</span></div>
-            <div class="cards-container" id="container-InProgress"></div>
-        </div>
-
-        <div class="column" id="column-Done" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'Done')">
-            <div class="column-header">Done <span id="count-Done">0</span></div>
-            <div class="cards-container" id="container-Done"></div>
-        </div>
-    </main>
-
-    <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
-        <div class="modal">
-            <h2 id="modal-title">Create Task</h2>
-            <div class="error-banner" id="error-banner"></div>
-            <form id="task-form" onsubmit="saveTask(event)">
-                <input type="hidden" id="task-id">
-                
-                <div class="form-group">
-                    <label for="form-title">Title *</label>
-                    <input type="text" id="form-title" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="form-desc">Description</label>
-                    <textarea id="form-desc" rows="3"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="form-priority">Priority</label>
-                    <select id="form-priority">
-                        <option value="High">High</option>
-                        <option value="Medium" selected>Medium</option>
-                        <option value="Low">Low</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="form-assignee">Assignee</label>
-                    <input type="text" id="form-assignee">
-                </div>
-
-                <div class="form-group">
-                    <label for="form-tags">Tags (comma-separated)</label>
-                    <input type="text" id="form-tags" placeholder="e.g. bug, UI, frontend">
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit">Save</button>
-                </div>
-            </form>
+        
+        <div class="flex items-center gap-3">
+            <input type="text" id="searchBar" onkeyup="render()" placeholder="Filter tasks..." class="jira-search px-3 py-1.5 w-48 rounded font-medium">
+            <button onclick="openForm()" class="bg-[#0052cc] hover:bg-[#0065ff] text-white text-xs font-bold px-4 py-2 rounded transition shadow-sm">
+                Create task
+            </button>
         </div>
     </div>
 
-    <script>
-        const API_BASE = "http://localhost:8000";
-        const PRIORITY_ORDER = { "High": 0, "Medium": 1, "Low": 2 };
+    <!-- Kanban Columns Grid with explicit separation gap-6 -->
+    <div class="grid md:grid-cols-3 gap-6">
+        <!-- To Do Lane -->
+        <div class="bg-[#f4f5f7] rounded-lg p-4 border border-gray-200/80 min-h-[550px]" ondrop="drop(event, 'ToDo')" ondragover="allowDrop(event)">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#5e6c84] mb-4">To Do</h2>
+            <div id="ToDo" class="space-y-3"></div>
+        </div>
+        <!-- In Progress Lane -->
+        <div class="bg-[#f4f5f7] rounded-lg p-4 border border-gray-200/80 min-h-[550px]" ondrop="drop(event, 'InProgress')" ondragover="allowDrop(event)">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#0052cc] mb-4">In Progress</h2>
+            <div id="InProgress" class="space-y-3"></div>
+        </div>
+        <!-- Done Lane -->
+        <div class="bg-[#f4f5f7] rounded-lg p-4 border border-gray-200/80 min-h-[550px]" ondrop="drop(event, 'Done')" ondragover="allowDrop(event)">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#006644] mb-4">Done</h2>
+            <div id="Done" class="space-y-3"></div>
+        </div>
+    </div>
+</div>
 
-        // 1. Fetch & Render Board
-        async function fetchTasks() {
-            const searchQuery = document.getElementById('search-input').value.trim();
-            let url = `${API_BASE}/tasks`;
-            if (searchQuery) {
-                url += `?search=${encodeURIComponent(searchQuery)}`;
-            }
+<!-- Modal Entry Frame -->
+<div id="taskModal" class="modal fixed inset-0 bg-[#091e42]/40 backdrop-blur-sm flex justify-center items-center z-50">
+    <div class="bg-white border border-[#dfe1e6] rounded-lg p-6 w-full max-w-md shadow-xl">
+        <h2 class="text-lg font-bold text-[#172b4d] tracking-tight mb-4">Create Task</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-[#5e6c84] mb-1">Summary *</label>
+                <input id="title" type="text" class="w-full bg-[#fafbfc] border-2 border-[#dfe1e6] p-2 text-sm rounded text-[#172b4d] outline-none focus:border-[#0052cc] focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-[#5e6c84] mb-1">Assignee</label>
+                <input id="assignee" type="text" placeholder="e.g. John Doe" class="w-full bg-[#fafbfc] border-2 border-[#dfe1e6] p-2 text-sm rounded text-[#172b4d] outline-none focus:border-[#0052cc] focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-[#5e6c84] mb-1">Priority</label>
+                <select id="priority" class="w-full bg-[#fafbfc] border-2 border-[#dfe1e6] p-2 text-sm rounded text-[#172b4d] outline-none focus:border-[#0052cc] focus:bg-white transition">
+                    <option value="High">High</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-[#5e6c84] mb-1">Description</label>
+                <textarea id="description" rows="3" class="w-full bg-[#fafbfc] border-2 border-[#dfe1e6] p-2 text-sm rounded text-[#172b4d] outline-none focus:border-[#0052cc] focus:bg-white transition"></textarea>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeForm()" class="px-4 py-2 text-xs font-bold text-[#42526e] hover:bg-gray-100 rounded">Cancel</button>
+                <button onclick="saveTask()" class="px-4 py-2 text-xs font-bold bg-[#0052cc] hover:bg-[#0065ff] text-white rounded">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("Could not load tasks");
-                const tasks = await response.json();
-                renderBoard(tasks);
-            } catch (err) {
-                console.error(err);
-                alert("Error loading tasks. Is the backend running?");
-            }
-        }
+<script>
+const API_BASE = "http://127.0.0.1:8000/api/tasks";
+let allTasks = [];
 
-        function renderBoard(tasks) {
-            const containers = {
-                "ToDo": document.getElementById('container-ToDo'),
-                "InProgress": document.getElementById('container-InProgress'),
-                "Done": document.getElementById('container-Done')
-            };
+function allowDrop(ev) { ev.preventDefault(); }
+function drag(ev, id) { ev.dataTransfer.setData("taskId", id); }
 
-            const counts = { "ToDo": 0, "InProgress": 0, "Done": 0 };
+async function drop(ev, newStatus) {
+    ev.preventDefault();
+    const taskId = ev.dataTransfer.getData("taskId");
+    const task = allTasks.find(t => t.id == taskId);
+    
+    if (task.status === "InProgress" && newStatus === "ToDo") { 
+        alert("Workflow Error: Moving cards backwards from In Progress to To Do is not permitted."); 
+        return; 
+    }
+    
+    await fetch(`${API_BASE}/${taskId}/status`, { 
+        method: "PATCH", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ status: newStatus }) 
+    });
+    render();
+}
 
-            // Clear old cards
-            Object.values(containers).forEach(container => container.innerHTML = "");
+async function render() {
+    const res = await fetch(`${API_BASE}/`);
+    allTasks = await res.json();
+    const query = document.getElementById("searchBar").value.toLowerCase().trim();
+    
+    document.querySelectorAll('#ToDo, #InProgress, #Done').forEach(el => el.innerHTML = "");
 
-            // Sort tasks by Priority: High -> Medium -> Low (per instructions)
-            tasks.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || a.id - b.id);
+    allTasks.filter(t => t.title.toLowerCase().includes(query)).forEach(task => {
+        const priority = task.priority || "Medium";
+        const badgeClass = `priority-${priority.toLowerCase()}`;
+        const assigneeText = task.assignee ? task.assignee.trim() : "Unassigned";
+        
+        // Compute short letters for avatar badge representation
+        const avatarInitials = assigneeText !== "Unassigned" 
+            ? assigneeText.split(" ").map(n => n[0]).join("").toUpperCase().substring(0,2) 
+            : "??";
 
-            tasks.forEach(task => {
-                if (containers[task.status]) {
-                    counts[task.status]++;
-                    const card = createTaskCardElement(task);
-                    containers[task.status].appendChild(card);
-                }
-            });
-
-            // Update Counts
-            document.getElementById('count-ToDo').innerText = counts["ToDo"];
-            document.getElementById('count-InProgress').innerText = counts["InProgress"];
-            document.getElementById('count-Done').innerText = counts["Done"];
-        }
-
-        function createTaskCardElement(task) {
-            const card = document.createElement('div');
-            card.className = 'task-card';
-            card.draggable = true;
-            card.id = `task-${task.id}`;
-            card.ondragstart = (e) => e.dataTransfer.setData("text/plain", task.id);
-
-            // Create tag elements
-            let tagsHTML = "";
-            if (task.tags) {
-                const tagList = task.tags.split(",");
-                tagsHTML = `<div class="tags-container">` + 
-                    tagList.map(t => `<span class="tag-chip">#${t}</span>`).join("") + 
-                    `</div>`;
-            }
-
-            card.innerHTML = `
-                <div class="task-header">
-                    <h3 class="task-title">${task.title}</h3>
-                    <span class="priority-badge priority-${task.priority.toLowerCase()}">${task.priority}</span>
+        document.getElementById(task.status).innerHTML += `
+            <div draggable="true" ondragstart="drag(event, ${task.id})" class="task-card p-4 rounded cursor-grab active:cursor-grabbing transition-all">
+                <h3 class="font-bold text-[14px] text-[#172b4d] tracking-tight leading-snug">${task.title}</h3>
+                <p class="text-[#5e6c84] text-xs mt-1.5 font-normal">${task.description || ""}</p>
+                
+                <!-- Assignee Label Layout Row -->
+                <div class="flex items-center gap-2 mt-3 bg-slate-50 p-1.5 rounded border border-gray-100">
+                    <div class="w-5 h-5 rounded-full bg-blue-100 border border-blue-300 text-[9px] font-bold text-blue-700 flex items-center justify-center shrink-0">
+                        ${avatarInitials}
+                    </div>
+                    <span class="text-[11px] font-semibold text-[#42526e] truncate">Assignee: ${assigneeText}</span>
                 </div>
-                <p style="margin: 0; font-size: 13px; color: #718096;">${task.description || ""}</p>
-                ${tagsHTML}
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                    <span style="font-size: 11px; color: #a0aec0;">Assignee: ${task.assignee || "Unassigned"}</span>
-                    <button onclick="openEditModal(${JSON.stringify(task).replace(/"/g, '&quot;')})" style="padding: 4px 8px; font-size: 11px;">Edit</button>
+
+                <div class="flex justify-between items-center mt-4 pt-2 border-t border-gray-100">
+                    <span class="${badgeClass} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">${priority}</span>
+                    <button onclick="deleteTask(${task.id})" class="techy-delete">Delete</button>
                 </div>
-            `;
-            return card;
-        }
+            </div>`;
+    });
+}
 
-        // 2. Drag & Drop Actions
-        function allowDrop(ev) {
-            ev.preventDefault();
-        }
+function openForm() { document.getElementById("taskModal").style.display = "flex"; }
+function closeForm() { 
+    document.getElementById("taskModal").style.display = "none";
+    document.getElementById("title").value = "";
+    document.getElementById("assignee").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("priority").value = "Medium";
+}
 
-        async function handleDrop(ev, targetStatus) {
-            ev.preventDefault();
-            const taskId = ev.dataTransfer.getData("text/plain");
-            if (!taskId) return;
+async function saveTask() {
+    const title = document.getElementById("title").value.trim();
+    if (!title) return alert("Validation Error: The Summary field is required.");
+    
+    const priority = document.getElementById("priority").value; 
+    const description = document.getElementById("description").value;
+    const assignee = document.getElementById("assignee").value;
 
-            try {
-                const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: targetStatus })
-                });
+    await fetch(`${API_BASE}/`, { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ 
+            title: title, 
+            description: description, 
+            priority: priority, 
+            status: "ToDo",
+            assignee: assignee
+        }) 
+    });
+    closeForm(); 
+    render();
+}
 
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    alert(`Transition Rejected: ${errorData.detail || "Invalid Move"}`);
-                    fetchTasks(); // Revert UI
-                } else {
-                    fetchTasks(); // Reload board on successful move
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Network error. Could not save status.");
-                fetchTasks();
-            }
-        }
+async function deleteTask(id) { 
+    if (confirm("Are you sure you want to delete this task permanently?")) { 
+        await fetch(`${API_BASE}/${id}`, { method: "DELETE" }); 
+        render(); 
+    } 
+}
 
-        // 3. Modal Actions
-        function openModal() {
-            document.getElementById('task-id').value = "";
-            document.getElementById('task-form').reset();
-            document.getElementById('modal-title').innerText = "Create Task";
-            document.getElementById('error-banner').style.display = "none";
-            document.getElementById('modal-overlay').style.display = "flex";
-        }
-
-        function openEditModal(task) {
-            document.getElementById('task-id').value = task.id;
-            document.getElementById('form-title').value = task.title;
-            document.getElementById('form-desc').value = task.description || "";
-            document.getElementById('form-priority').value = task.priority;
-            document.getElementById('form-assignee').value = task.assignee || "";
-            document.getElementById('form-tags').value = task.tags || "";
-            document.getElementById('modal-title').innerText = "Edit Task";
-            document.getElementById('error-banner').style.display = "none";
-            document.getElementById('modal-overlay').style.display = "flex";
-        }
-
-        function closeModal() {
-            document.getElementById('modal-overlay').style.display = "none";
-        }
-
-        function closeModalOnOverlay(e) {
-            if (e.target.id === 'modal-overlay') closeModal();
-        }
-
-        // Close on Escape key press
-        window.addEventListener('keydown', (e) => {
-            if (e.key === "Escape") closeModal();
-        });
-
-        // 4. Save Task (POST/PATCH validation)
-        async function saveTask(e) {
-            e.preventDefault();
-            const id = document.getElementById('task-id').value;
-            const title = document.getElementById('form-title').value.trim(); // Satisfies Title trimming rule
-            const description = document.getElementById('form-desc').value;
-            const priority = document.getElementById('form-priority').value;
-            const assignee = document.getElementById('form-assignee').value;
-            const tags = document.getElementById('form-tags').value;
-
-            const payload = { title, description, priority, assignee, tags };
-
-            const url = id ? `${API_BASE}/tasks/${id}` : `${API_BASE}/tasks`;
-            const method = id ? 'PATCH' : 'POST';
-
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    const errRes = await response.json();
-                    let errMsg = errRes.detail;
-                    if (Array.isArray(errMsg)) {
-                        errMsg = errMsg.map(e => e.msg).join(", ");
-                    }
-                    throw new Error(errMsg || "Failed to save task");
-                }
-
-                closeModal();
-                fetchTasks();
-            } catch (err) {
-                const errorBanner = document.getElementById('error-banner');
-                errorBanner.innerText = err.message;
-                errorBanner.style.display = "block";
-            }
-        }
-
-        // Initial Load
-        fetchTasks();
-    </script>
+document.addEventListener("DOMContentLoaded", render);
+</script>
 </body>
 </html>
