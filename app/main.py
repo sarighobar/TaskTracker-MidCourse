@@ -54,12 +54,23 @@ async def create_task(task: Task):
     return task_data
 
 
-# UPDATED: Implements ADR 001 optional status filtering parameter
+# UPDATED: Implements ADR 001 filtering and text-based multi-column search
 @app.get("/api/tasks/")
-async def get_tasks(status: Optional[str] = None):
+async def get_tasks(status: Optional[str] = None, search: Optional[str] = None):
+    results = tasks_db
+    
     if status:
-        return [t for t in tasks_db if t["status"] == status]
-    return tasks_db
+        results = [t for t in results if t["status"] == status]
+        
+    if search:
+        search_lower = search.lower()
+        results = [
+            t for t in results 
+            if search_lower in t["title"].lower() or 
+               (t.get("description") and search_lower in t["description"].lower())
+        ]
+        
+    return results
 
 
 @app.get("/api/tasks/{task_id}")
