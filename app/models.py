@@ -3,8 +3,11 @@ from .database import Base
 
 class Task(Base):
     __tablename__ = "tasks"
+
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
-    description = Column(String, nullable=True)
+    description = Column(String, nullable=True, default="")
+    priority = Column(String, default="Medium")
     status = Column(String, default="ToDo")
-    tags = Column(String, nullable=True)
+    tags = Column(String, nullable=True, default="")
+    assignee = Column(String, nullable=True, default="")

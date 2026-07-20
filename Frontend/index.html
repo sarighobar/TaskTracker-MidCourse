@@ -3,165 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Task Tracker</title>
+    <title>TaskTracker - Kanban Board</title>
     <style>
-        :root {
-            --bg-color: #f4f5f7;
-            --card-bg: #ffffff;
-            --text-color: #172b4d;
-            --primary-color: #0052cc;
-            --border-color: #dfe1e6;
-            --column-bg: #ebecf0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        input, select, button {
-            padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        button.btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button.btn-primary:hover {
-            background-color: #0065ff;
-        }
-
-        .board {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-
-        .column {
-            background-color: var(--column-bg);
-            border-radius: 6px;
-            width: 300px;
-            padding: 10px;
-            min-height: 500px;
-        }
-
-        .column-header {
-            font-weight: bold;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 3px;
-            box-shadow: 0 1px 2px rgba(9, 30, 66, 0.25);
-            padding: 10px;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-
-        .card-title {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .card-desc {
-            font-size: 12px;
-            color: #5e6c84;
-            margin-bottom: 8px;
-        }
-
-        .card-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-top: 6px;
-        }
-
-        .tag-chip {
-            background-color: #deebff;
-            color: #0747a6;
-            font-size: 11px;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-weight: 500;
-        }
-
-        .card-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 8px;
-            font-size: 11px;
-        }
-
-        .priority-High { color: #de350b; font-weight: bold; }
-        .priority-Medium { color: #ffab00; font-weight: bold; }
-        .priority-Low { color: #36b37e; font-weight: bold; }
-
-        /* Modal styling */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f5f7; color: #172b4d; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+        input, select, button { padding: 8px 12px; border: 1px solid #dfe1e6; border-radius: 4px; font-size: 14px; }
+        button { background-color: #0052cc; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0065ff; }
+        
+        .board { display: flex; gap: 20px; align-items: flex-start; }
+        .column { background-color: #ebecf0; border-radius: 6px; width: 300px; padding: 10px; min-height: 500px; }
+        .column h3 { margin-bottom: 15px; font-size: 16px; text-transform: uppercase; color: #5e6c84; }
+        
+        .card { background-color: white; border-radius: 4px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+        .card h4 { margin-bottom: 6px; font-size: 15px; }
+        .card p { font-size: 13px; color: #6b778c; margin-bottom: 8px; }
+        
+        .tag-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+        .chip { background-color: #deebff; color: #0747a6; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 24px; border-radius: 8px; width: 400px; display: flex; flex-direction: column; gap: 12px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>Enterprise Task Tracker</h2>
-        <button class="btn-primary" onclick="openModal()">+ Add Task</button>
-    </div>
+    <header>
+        <h1>TaskTracker Kanban</h1>
+        <button onclick="openModal()">+ Add New Task</button>
+    </header>
 
-    <!-- Filter Controls -->
     <div class="controls">
-        <input type="text" id="search-input" placeholder="Search title/desc..." oninput="fetchTasks()">
-        <input type="text" id="tag-filter" placeholder="Filter by tag..." oninput="fetchTasks()">
-        <select id="status-filter" onchange="fetchTasks()">
+        <input type="text" id="searchInput" placeholder="Search title or description..." oninput="loadTasks()">
+        <input type="text" id="tagFilterInput" placeholder="Filter by tag..." oninput="loadTasks()">
+        <select id="statusFilter" onchange="loadTasks()">
             <option value="">All Statuses</option>
             <option value="ToDo">To Do</option>
             <option value="InProgress">In Progress</option>
             <option value="Done">Done</option>
         </select>
-        <select id="priority-filter" onchange="fetchTasks()">
+        <select id="priorityFilter" onchange="loadTasks()">
             <option value="">All Priorities</option>
             <option value="High">High</option>
             <option value="Medium">Medium</option>
@@ -169,172 +52,106 @@
         </select>
     </div>
 
-    <!-- Kanban Board -->
     <div class="board">
-        <div class="column" id="col-ToDo">
-            <div class="column-header">TO DO <span id="count-ToDo">0</span></div>
-            <div class="cards-container" id="cards-ToDo"></div>
+        <div class="column">
+            <h3>To Do</h3>
+            <div id="col-ToDo"></div>
         </div>
-        <div class="column" id="col-InProgress">
-            <div class="column-header">IN PROGRESS <span id="count-InProgress">0</span></div>
-            <div class="cards-container" id="cards-InProgress"></div>
+        <div class="column">
+            <h3>In Progress</h3>
+            <div id="col-InProgress"></div>
         </div>
-        <div class="column" id="col-Done">
-            <div class="column-header">DONE <span id="count-Done">0</span></div>
-            <div class="cards-container" id="cards-Done"></div>
+        <div class="column">
+            <h3>Done</h3>
+            <div id="col-Done"></div>
         </div>
     </div>
 
-    <!-- Create/Edit Modal -->
-    <div class="modal" id="task-modal">
+    <div class="modal" id="taskModal">
         <div class="modal-content">
-            <h3 id="modal-title">Create Task</h3>
-            <input type="hidden" id="task-id">
-            <input type="text" id="task-title-input" placeholder="Task Title *" required>
-            <textarea id="task-desc-input" placeholder="Description"></textarea>
-            
-            <label for="task-priority-input">Priority:</label>
-            <select id="task-priority-input">
-                <option value="Low">Low</option>
-                <option value="Medium" selected>Medium</option>
-                <option value="High">High</option>
+            <h3 id="modalTitle">Create Task</h3>
+            <input type="text" id="taskTitle" placeholder="Task Title (Required)">
+            <textarea id="taskDesc" placeholder="Task Description"></textarea>
+            <input type="text" id="taskTags" placeholder="Tags (comma-separated, e.g. frontend, bug)">
+            <select id="taskPriority">
+                <option value="Low">Low Priority</option>
+                <option value="Medium" selected>Medium Priority</option>
+                <option value="High">High Priority</option>
             </select>
-
-            <label for="task-status-input">Status:</label>
-            <select id="task-status-input">
+            <select id="taskStatus">
                 <option value="ToDo">To Do</option>
                 <option value="InProgress">In Progress</option>
                 <option value="Done">Done</option>
             </select>
-
-            <label for="task-tags-input">Tags (comma-separated):</label>
-            <input type="text" id="task-tags-input" placeholder="e.g. bug, backend, ui">
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-                <button onclick="closeModal()">Cancel</button>
-                <button class="btn-primary" onclick="saveTask()">Save</button>
+            <div style="display:flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" style="background:#6b778c;" onclick="closeModal()">Cancel</button>
+                <button type="button" onclick="saveTask()">Save Task</button>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = '/api/tasks/';
+        const API_BASE = '/api/tasks/';
 
-        async function fetchTasks() {
-            const search = document.getElementById('search-input').value;
-            const tag = document.getElementById('tag-filter').value;
-            const status = document.getElementById('status-filter').value;
-            const priority = document.getElementById('priority-filter').value;
+        async function loadTasks() {
+            const search = document.getElementById('searchInput').value;
+            const tag = document.getElementById('tagFilterInput').value;
+            const status = document.getElementById('statusFilter').value;
+            const priority = document.getElementById('priorityFilter').value;
 
-            let query = new URLSearchParams();
-            if (search) query.append('search', search);
-            if (tag) query.append('tag', tag);
-            if (status) query.append('status', status);
-            if (priority) query.append('priority', priority);
+            let url = new URL(API_BASE, window.location.origin);
+            if (search) url.searchParams.append('search', search);
+            if (tag) url.searchParams.append('tag', tag);
+            if (status) url.searchParams.append('status', status);
+            if (priority) url.searchParams.append('priority', priority);
 
-            const res = await fetch(`${API_URL}?${query.toString()}`);
+            const res = await fetch(url);
             const tasks = await res.json();
-            renderBoard(tasks);
-        }
 
-        function renderBoard(tasks) {
-            const statuses = ['ToDo', 'InProgress', 'Done'];
-            statuses.forEach(s => {
-                const container = document.getElementById(`cards-${s}`);
-                container.innerHTML = '';
-                const filtered = tasks.filter(t => t.status === s);
-                document.getElementById(`count-${s}`).innerText = filtered.length;
+            ['ToDo', 'InProgress', 'Done'].forEach(s => document.getElementById(`col-${s}`).innerHTML = '');
 
-                filtered.forEach(task => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    
-                    const tagsList = task.tags 
-                        ? task.tags.split(',').map(t => `<span class="tag-chip">${t.strip ? t.strip() : t.trim()}</span>`).join('') 
-                        : '';
+            tasks.forEach(t => {
+                const col = document.getElementById(`col-${t.status}`) || document.getElementById('col-ToDo');
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                let tagsHtml = '';
+                if (t.tags) {
+                    const tagList = t.tags.split(',').filter(x => x.trim());
+                    tagsHtml = `<div class="tag-chips">${tagList.map(tg => `<span class="chip">${tg.trim()}</span>`).join('')}</div>`;
+                }
 
-                    card.innerHTML = `
-                        <div class="card-title">${task.title}</div>
-                        <div class="card-desc">${task.description || ''}</div>
-                        <div class="card-tags">${tagsList}</div>
-                        <div class="card-meta">
-                            <span class="priority-${task.priority}">${task.priority}</span>
-                            <button onclick="deleteTask(${task.id}); event.stopPropagation();">🗑️</button>
-                        </div>
-                    `;
-                    card.onclick = () => openModal(task);
-                    container.appendChild(card);
-                });
+                card.innerHTML = `
+                    <h4>${t.title}</h4>
+                    <p>${t.description || ''}</p>
+                    <small>Priority: ${t.priority}</small>
+                    ${tagsHtml}
+                `;
+                col.appendChild(card);
             });
         }
 
-        function openModal(task = null) {
-            document.getElementById('task-modal').style.display = 'flex';
-            if (task) {
-                document.getElementById('modal-title').innerText = 'Edit Task';
-                document.getElementById('task-id').value = task.id;
-                document.getElementById('task-title-input').value = task.title;
-                document.getElementById('task-desc-input').value = task.description || '';
-                document.getElementById('task-priority-input').value = task.priority || 'Medium';
-                document.getElementById('task-status-input').value = task.status || 'ToDo';
-                document.getElementById('task-tags-input').value = task.tags || '';
-            } else {
-                document.getElementById('modal-title').innerText = 'Create Task';
-                document.getElementById('task-id').value = '';
-                document.getElementById('task-title-input').value = '';
-                document.getElementById('task-desc-input').value = '';
-                document.getElementById('task-priority-input').value = 'Medium';
-                document.getElementById('task-status-input').value = 'ToDo';
-                document.getElementById('task-tags-input').value = '';
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('task-modal').style.display = 'none';
-        }
+        function openModal() { document.getElementById('taskModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('taskModal').style.display = 'none'; }
 
         async function saveTask() {
-            const id = document.getElementById('task-id').value;
-            const payload = {
-                title: document.getElementById('task-title-input').value,
-                description: document.getElementById('task-desc-input').value,
-                priority: document.getElementById('task-priority-input').value,
-                status: document.getElementById('task-status-input').value,
-                tags: document.getElementById('task-tags-input').value
-            };
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDesc').value;
+            const tags = document.getElementById('taskTags').value;
+            const priority = document.getElementById('taskPriority').value;
+            const status = document.getElementById('taskStatus').value;
 
-            if (!payload.title.trim()) {
-                alert('Title is required');
-                return;
-            }
-
-            if (id) {
-                await fetch(`${API_URL}${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            } else {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            }
+            await fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description, tags, priority, status })
+            });
 
             closeModal();
-            fetchTasks();
+            loadTasks();
         }
 
-        async function deleteTask(id) {
-            if (confirm('Delete this task?')) {
-                await fetch(`${API_URL}${id}`, { method: 'DELETE' });
-                fetchTasks();
-            }
-        }
-
-        // Initial load
-        fetchTasks();
+        document.addEventListener('DOMContentLoaded', loadTasks);
     </script>
 </body>
 </html>
