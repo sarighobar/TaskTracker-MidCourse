@@ -1,8 +1,8 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
-from typing import Optional
+from typing import Optional, List
 
 app = FastAPI()
 
@@ -35,13 +35,19 @@ class Task(BaseModel):
     def normalize_tags(cls, v):
         if not v: 
             return ""
-        # Strip trailing whitespaces around comma-separated tags
-        return ",".join([tag.strip() for tag in v.split(",") if tag.strip()])
+        # Strip whitespaces around comma-separated tags, eliminate empty strings
+        cleaned = [tag.strip() for tag in v.split(",") if tag.strip()]
+        return ",".join(cleaned)
 
 
 @app.get("/")
 async def read_index():
     return FileResponse("Frontend/index.html")
+
+
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def health_check():
+    return {"status": "ok"}
 
 
 @app.post("/api/tasks/", status_code=status.HTTP_201_CREATED)
@@ -54,20 +60,38 @@ async def create_task(task: Task):
     return task_data
 
 
-# UPDATED: Implements ADR 001 filtering and text-based multi-column search
 @app.get("/api/tasks/")
-async def get_tasks(status: Optional[str] = None, search: Optional[str] = None):
+async def get_tasks(
+    status: Optional[str] = None, 
+    priority: Optional[str] = None,
+    tag: Optional[str] = None,
+    search: Optional[str] = None
+):
     results = tasks_db
     
+    # 1. Filter by Status if requested
     if status:
-        results = [t for t in results if t["status"] == status]
+        results = [t for t in results if t.get("status") == status]
         
+    # 2. Filter by Priority if requested
+    if priority:
+        results = [t for t in results if t.get("priority") == priority]
+
+    # 3. Filter by Tag if requested
+    if tag:
+        tag_lower = tag.lower()
+        results = [
+            t for t in results 
+            if tag_lower in [tg.strip().lower() for tg in t.get("tags", "").split(",") if tg.strip()]
+        ]
+        
+    # 4. Multi-column Search across Title & Description
     if search:
         search_lower = search.lower()
         results = [
             t for t in results 
-            if search_lower in t["title"].lower() or 
-               (t.get("description") and search_lower in t["description"].lower())
+            if search_lower in t.get("title", "").lower() or 
+               search_lower in t.get("description", "").lower()
         ]
         
     return results
@@ -85,6 +109,10 @@ async def get_single_task(task_id: int):
 async def update_task(task_id: int, task_update: dict):
     for t in tasks_db:
         if t["id"] == task_id:
+            # If tags are updated, normalize them
+            if "tags" in task_update and task_update["tags"]:
+                tags_clean = [tg.strip() for tg in task_update["tags"].split(",") if tg.strip()]
+                task_update["tags"] = ",".join(tags_clean)
             t.update(task_update)
             return t
     raise HTTPException(status_code=404, detail="Task not found")

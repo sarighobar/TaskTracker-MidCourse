@@ -2,237 +2,339 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TaskTracker Pro // Workspace</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Task Tracker</title>
     <style>
-        body { 
-            background: #f4f5f7; 
-            color: #172b4d; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        :root {
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-color: #172b4d;
+            --primary-color: #0052cc;
+            --border-color: #dfe1e6;
+            --column-bg: #ebecf0;
         }
-        .modal { display: none; }
-        
-        .priority-high { background: #ffebe6; color: #de350b; border: 1px solid #ffbdad; }
-        .priority-medium { background: #fffae6; color: #b68d00; border: 1px solid #fff0b3; }
-        .priority-low { background: #e3fcef; color: #006644; border: 1px solid #abf5d1; }
-        
-        .techy-delete { 
-            background: #ffffff;
-            color: #42526e;
-            border: 1px solid #dfe1e6;
-            padding: 4px 10px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        input, select, button {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button.btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button.btn-primary:hover {
+            background-color: #0065ff;
+        }
+
+        .board {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .column {
+            background-color: var(--column-bg);
+            border-radius: 6px;
+            width: 300px;
+            padding: 10px;
+            min-height: 500px;
+        }
+
+        .column-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card {
+            background-color: var(--card-bg);
             border-radius: 3px;
-            transition: all 0.15s ease-in-out;
-        }
-        .techy-delete:hover { 
-            background: #de350b; 
-            color: #ffffff; 
-            border-color: #de350b;
+            box-shadow: 0 1px 2px rgba(9, 30, 66, 0.25);
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
         }
 
-        .task-card { 
-            background: #ffffff; 
-            border: 1px solid #dfe1e6; 
-            box-shadow: 0 1px 2px 0 rgba(9, 30, 66, 0.25); 
-            transition: box-shadow 0.2s ease, border-color 0.2s ease;
-        }
-        .task-card:hover { 
-            border-color: #4c9aff; 
-            box-shadow: 0 4px 8px -2px rgba(9, 30, 66, 0.25); 
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
-        .jira-search {
-            font-size: 13px;
-            background: #fafbfc;
-            border: 2px solid #dfe1e6;
-            color: #172b4d;
-            transition: all 0.15s ease-in-out;
+        .card-desc {
+            font-size: 12px;
+            color: #5e6c84;
+            margin-bottom: 8px;
         }
-        .jira-search:focus {
-            background: #ffffff;
-            border-color: #0052cc;
-            outline: none;
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .tag-chip {
+            background-color: #deebff;
+            color: #0747a6;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 11px;
+        }
+
+        .priority-High { color: #de350b; font-weight: bold; }
+        .priority-Medium { color: #ffab00; font-weight: bold; }
+        .priority-Low { color: #36b37e; font-weight: bold; }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
     </style>
 </head>
-<body class="p-8">
-<div class="max-w-7xl mx-auto bg-white rounded-lg border border-[#dfe1e6] p-6 shadow-sm">
-    
-    <!-- Control Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-5 mb-6">
-        <div>
-            <h1 class="text-xl font-bold tracking-tight text-[#172b4d]">TaskTracker <span class="text-blue-600 font-extrabold">// Board</span></h1>
-            <p class="text-xs text-slate-500 font-semibold mt-0.5">Workflow: Forward Movement Restriction Enabled</p>
+<body>
+
+    <div class="header">
+        <h2>Enterprise Task Tracker</h2>
+        <button class="btn-primary" onclick="openModal()">+ Add Task</button>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="controls">
+        <input type="text" id="search-input" placeholder="Search title/desc..." oninput="fetchTasks()">
+        <input type="text" id="tag-filter" placeholder="Filter by tag..." oninput="fetchTasks()">
+        <select id="status-filter" onchange="fetchTasks()">
+            <option value="">All Statuses</option>
+            <option value="ToDo">To Do</option>
+            <option value="InProgress">In Progress</option>
+            <option value="Done">Done</option>
+        </select>
+        <select id="priority-filter" onchange="fetchTasks()">
+            <option value="">All Priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+        </select>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="board">
+        <div class="column" id="col-ToDo">
+            <div class="column-header">TO DO <span id="count-ToDo">0</span></div>
+            <div class="cards-container" id="cards-ToDo"></div>
         </div>
-        
-        <div class="flex items-center gap-3">
-            <input type="text" id="searchBar" onkeyup="render()" placeholder="Filter tasks..." class="jira-search px-3 py-1.5 w-48 rounded font-medium">
-            <button onclick="openForm()" class="bg-[#0052cc] hover:bg-[#0065ff] text-white text-xs font-bold px-4 py-2 rounded transition shadow-sm">
-                Create task
-            </button>
+        <div class="column" id="col-InProgress">
+            <div class="column-header">IN PROGRESS <span id="count-InProgress">0</span></div>
+            <div class="cards-container" id="cards-InProgress"></div>
+        </div>
+        <div class="column" id="col-Done">
+            <div class="column-header">DONE <span id="count-Done">0</span></div>
+            <div class="cards-container" id="cards-Done"></div>
         </div>
     </div>
 
-    <!-- Kanban Columns Grid with explicit separation gap-6 -->
-    <div class="grid md:grid-cols-3 gap-6">
-        <!-- To Do Lane -->
-        <div class="bg-[#f4f5f7] rounded-lg p-4 border border-gray-200/80 min-h-[550px]" ondrop="drop(event, 'ToDo')" ondragover="allowDrop(event)">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-[#5e6c84] mb-4">To Do</h2>
-            <div id="ToDo" class="space-y-3"></div>
-        </div>
-        <!-- In Progress Lane -->
-        <div class="bg-[#f4f5f7] rounded-lg p-4 border border-gray-200/80 min-h-[550px]" ondrop="drop(event, 'InProgress')" ondragover="allowDrop(event)">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-[#0052cc] mb-4">In Progress</h2>
-            <div id="InProgress" class="space-y-3"></div>
-        </div>
-        <!-- Done Lane -->
-        <div class="bg-[#f4f5f7] rounded-lg p-4 border border-gray-200/80 min-h-[550px]" ondrop="drop(event, 'Done')" ondragover="allowDrop(event)">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-[#006644] mb-4">Done</h2>
-            <div id="Done" class="space-y-3"></div>
-        </div>
-    </div>
-</div>
+    <!-- Create/Edit Modal -->
+    <div class="modal" id="task-modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Create Task</h3>
+            <input type="hidden" id="task-id">
+            <input type="text" id="task-title-input" placeholder="Task Title *" required>
+            <textarea id="task-desc-input" placeholder="Description"></textarea>
+            
+            <label for="task-priority-input">Priority:</label>
+            <select id="task-priority-input">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+            </select>
 
-<!-- Modal Entry Frame -->
-<div id="taskModal" class="modal fixed inset-0 bg-[#091e42]/40 backdrop-blur-sm flex justify-center items-center z-50">
-    <div class="bg-white border border-[#dfe1e6] rounded-lg p-6 w-full max-w-md shadow-xl">
-        <h2 class="text-lg font-bold text-[#172b4d] tracking-tight mb-4">Create Task</h2>
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs font-bold text-[#5e6c84] mb-1">Summary *</label>
-                <input id="title" type="text" class="w-full bg-[#fafbfc] border-2 border-[#dfe1e6] p-2 text-sm rounded text-[#172b4d] outline-none focus:border-[#0052cc] focus:bg-white transition">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-[#5e6c84] mb-1">Assignee</label>
-                <input id="assignee" type="text" placeholder="e.g. John Doe" class="w-full bg-[#fafbfc] border-2 border-[#dfe1e6] p-2 text-sm rounded text-[#172b4d] outline-none focus:border-[#0052cc] focus:bg-white transition">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-[#5e6c84] mb-1">Priority</label>
-                <select id="priority" class="w-full bg-[#fafbfc] border-2 border-[#dfe1e6] p-2 text-sm rounded text-[#172b4d] outline-none focus:border-[#0052cc] focus:bg-white transition">
-                    <option value="High">High</option>
-                    <option value="Medium" selected>Medium</option>
-                    <option value="Low">Low</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-[#5e6c84] mb-1">Description</label>
-                <textarea id="description" rows="3" class="w-full bg-[#fafbfc] border-2 border-[#dfe1e6] p-2 text-sm rounded text-[#172b4d] outline-none focus:border-[#0052cc] focus:bg-white transition"></textarea>
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeForm()" class="px-4 py-2 text-xs font-bold text-[#42526e] hover:bg-gray-100 rounded">Cancel</button>
-                <button onclick="saveTask()" class="px-4 py-2 text-xs font-bold bg-[#0052cc] hover:bg-[#0065ff] text-white rounded">Create</button>
+            <label for="task-status-input">Status:</label>
+            <select id="task-status-input">
+                <option value="ToDo">To Do</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Done">Done</option>
+            </select>
+
+            <label for="task-tags-input">Tags (comma-separated):</label>
+            <input type="text" id="task-tags-input" placeholder="e.g. bug, backend, ui">
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveTask()">Save</button>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-const API_BASE = "http://127.0.0.1:8000/api/tasks";
-let allTasks = [];
+    <script>
+        const API_URL = '/api/tasks/';
 
-function allowDrop(ev) { ev.preventDefault(); }
-function drag(ev, id) { ev.dataTransfer.setData("taskId", id); }
+        async function fetchTasks() {
+            const search = document.getElementById('search-input').value;
+            const tag = document.getElementById('tag-filter').value;
+            const status = document.getElementById('status-filter').value;
+            const priority = document.getElementById('priority-filter').value;
 
-async function drop(ev, newStatus) {
-    ev.preventDefault();
-    const taskId = ev.dataTransfer.getData("taskId");
-    const task = allTasks.find(t => t.id == taskId);
-    
-    if (task.status === "InProgress" && newStatus === "ToDo") { 
-        alert("Workflow Error: Moving cards backwards from In Progress to To Do is not permitted."); 
-        return; 
-    }
-    
-    await fetch(`${API_BASE}/${taskId}/status`, { 
-        method: "PATCH", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ status: newStatus }) 
-    });
-    render();
-}
+            let query = new URLSearchParams();
+            if (search) query.append('search', search);
+            if (tag) query.append('tag', tag);
+            if (status) query.append('status', status);
+            if (priority) query.append('priority', priority);
 
-async function render() {
-    const res = await fetch(`${API_BASE}/`);
-    allTasks = await res.json();
-    const query = document.getElementById("searchBar").value.toLowerCase().trim();
-    
-    document.querySelectorAll('#ToDo, #InProgress, #Done').forEach(el => el.innerHTML = "");
+            const res = await fetch(`${API_URL}?${query.toString()}`);
+            const tasks = await res.json();
+            renderBoard(tasks);
+        }
 
-    allTasks.filter(t => t.title.toLowerCase().includes(query)).forEach(task => {
-        const priority = task.priority || "Medium";
-        const badgeClass = `priority-${priority.toLowerCase()}`;
-        const assigneeText = task.assignee ? task.assignee.trim() : "Unassigned";
-        
-        // Compute short letters for avatar badge representation
-        const avatarInitials = assigneeText !== "Unassigned" 
-            ? assigneeText.split(" ").map(n => n[0]).join("").toUpperCase().substring(0,2) 
-            : "??";
+        function renderBoard(tasks) {
+            const statuses = ['ToDo', 'InProgress', 'Done'];
+            statuses.forEach(s => {
+                const container = document.getElementById(`cards-${s}`);
+                container.innerHTML = '';
+                const filtered = tasks.filter(t => t.status === s);
+                document.getElementById(`count-${s}`).innerText = filtered.length;
 
-        document.getElementById(task.status).innerHTML += `
-            <div draggable="true" ondragstart="drag(event, ${task.id})" class="task-card p-4 rounded cursor-grab active:cursor-grabbing transition-all">
-                <h3 class="font-bold text-[14px] text-[#172b4d] tracking-tight leading-snug">${task.title}</h3>
-                <p class="text-[#5e6c84] text-xs mt-1.5 font-normal">${task.description || ""}</p>
-                
-                <!-- Assignee Label Layout Row -->
-                <div class="flex items-center gap-2 mt-3 bg-slate-50 p-1.5 rounded border border-gray-100">
-                    <div class="w-5 h-5 rounded-full bg-blue-100 border border-blue-300 text-[9px] font-bold text-blue-700 flex items-center justify-center shrink-0">
-                        ${avatarInitials}
-                    </div>
-                    <span class="text-[11px] font-semibold text-[#42526e] truncate">Assignee: ${assigneeText}</span>
-                </div>
+                filtered.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    
+                    const tagsList = task.tags 
+                        ? task.tags.split(',').map(t => `<span class="tag-chip">${t.strip ? t.strip() : t.trim()}</span>`).join('') 
+                        : '';
 
-                <div class="flex justify-between items-center mt-4 pt-2 border-t border-gray-100">
-                    <span class="${badgeClass} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">${priority}</span>
-                    <button onclick="deleteTask(${task.id})" class="techy-delete">Delete</button>
-                </div>
-            </div>`;
-    });
-}
+                    card.innerHTML = `
+                        <div class="card-title">${task.title}</div>
+                        <div class="card-desc">${task.description || ''}</div>
+                        <div class="card-tags">${tagsList}</div>
+                        <div class="card-meta">
+                            <span class="priority-${task.priority}">${task.priority}</span>
+                            <button onclick="deleteTask(${task.id}); event.stopPropagation();">🗑️</button>
+                        </div>
+                    `;
+                    card.onclick = () => openModal(task);
+                    container.appendChild(card);
+                });
+            });
+        }
 
-function openForm() { document.getElementById("taskModal").style.display = "flex"; }
-function closeForm() { 
-    document.getElementById("taskModal").style.display = "none";
-    document.getElementById("title").value = "";
-    document.getElementById("assignee").value = "";
-    document.getElementById("description").value = "";
-    document.getElementById("priority").value = "Medium";
-}
+        function openModal(task = null) {
+            document.getElementById('task-modal').style.display = 'flex';
+            if (task) {
+                document.getElementById('modal-title').innerText = 'Edit Task';
+                document.getElementById('task-id').value = task.id;
+                document.getElementById('task-title-input').value = task.title;
+                document.getElementById('task-desc-input').value = task.description || '';
+                document.getElementById('task-priority-input').value = task.priority || 'Medium';
+                document.getElementById('task-status-input').value = task.status || 'ToDo';
+                document.getElementById('task-tags-input').value = task.tags || '';
+            } else {
+                document.getElementById('modal-title').innerText = 'Create Task';
+                document.getElementById('task-id').value = '';
+                document.getElementById('task-title-input').value = '';
+                document.getElementById('task-desc-input').value = '';
+                document.getElementById('task-priority-input').value = 'Medium';
+                document.getElementById('task-status-input').value = 'ToDo';
+                document.getElementById('task-tags-input').value = '';
+            }
+        }
 
-async function saveTask() {
-    const title = document.getElementById("title").value.trim();
-    if (!title) return alert("Validation Error: The Summary field is required.");
-    
-    const priority = document.getElementById("priority").value; 
-    const description = document.getElementById("description").value;
-    const assignee = document.getElementById("assignee").value;
+        function closeModal() {
+            document.getElementById('task-modal').style.display = 'none';
+        }
 
-    await fetch(`${API_BASE}/`, { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ 
-            title: title, 
-            description: description, 
-            priority: priority, 
-            status: "ToDo",
-            assignee: assignee
-        }) 
-    });
-    closeForm(); 
-    render();
-}
+        async function saveTask() {
+            const id = document.getElementById('task-id').value;
+            const payload = {
+                title: document.getElementById('task-title-input').value,
+                description: document.getElementById('task-desc-input').value,
+                priority: document.getElementById('task-priority-input').value,
+                status: document.getElementById('task-status-input').value,
+                tags: document.getElementById('task-tags-input').value
+            };
 
-async function deleteTask(id) { 
-    if (confirm("Are you sure you want to delete this task permanently?")) { 
-        await fetch(`${API_BASE}/${id}`, { method: "DELETE" }); 
-        render(); 
-    } 
-}
+            if (!payload.title.trim()) {
+                alert('Title is required');
+                return;
+            }
 
-document.addEventListener("DOMContentLoaded", render);
-</script>
+            if (id) {
+                await fetch(`${API_URL}${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            closeModal();
+            fetchTasks();
+        }
+
+        async function deleteTask(id) {
+            if (confirm('Delete this task?')) {
+                await fetch(`${API_URL}${id}`, { method: 'DELETE' });
+                fetchTasks();
+            }
+        }
+
+        // Initial load
+        fetchTasks();
+    </script>
 </body>
 </html>
