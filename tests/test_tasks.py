@@ -160,3 +160,36 @@ def test_health_check_endpoint(client):
     res = client.get("/health")
     assert res.status_code == 200
     assert res.json() == {"status": "ok"}
+
+    import pytest
+from fastapi import HTTPException
+from app.business_rules import validate_status_transition
+
+def test_same_status_is_valid():
+    """Verify that keeping the same status doesn't raise an error."""
+    validate_status_transition("ToDo", "ToDo")
+    validate_status_transition("InProgress", "InProgress")
+    validate_status_transition("Done", "Done")
+
+def test_allowed_status_transitions():
+    """Verify valid transitions move through the state machine correctly."""
+    validate_status_transition("ToDo", "InProgress")
+    validate_status_transition("InProgress", "Done")
+    validate_status_transition("InProgress", "ToDo")
+    validate_status_transition("Done", "InProgress")
+
+def test_invalid_current_status_raises_400():
+    """Verify an unknown starting status raises a 400 HTTPException."""
+    with pytest.raises(HTTPException) as exc_info:
+        validate_status_transition("UnknownStatus", "Done")
+    
+    assert exc_info.value.status_code == 400
+    assert "Invalid current status" in exc_info.value.detail
+
+def test_disallowed_transition_raises_400():
+    """Verify skipping states (e.g. ToDo -> Done directly) raises a 400 HTTPException."""
+    with pytest.raises(HTTPException) as exc_info:
+        validate_status_transition("ToDo", "Done")
+    
+    assert exc_info.value.status_code == 400
+    assert "Invalid status transition" in exc_info.value.detail
