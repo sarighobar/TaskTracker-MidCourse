@@ -1,31 +1,56 @@
-# Prompt Log
+# AI Prompt Log & Workflow Evidence
 
-## Feature 1: Tags & Labels
-
-### Prompt 1
-> **Prompt:** "Write a Pydantic validator or SQLAlchemy helper function to parse comma-separated tags, strip whitespace around each tag, and strip empty strings."  
-> **Outcome:** Implemented normalization logic ensuring input like `" backend , , devops "` cleans to `"backend,devops"`.
-
-### Prompt 2
-> **Prompt:** "How do I render tag chips visually inside a CSS flex layout on Kanban card elements in raw HTML/JS?"  
-> **Outcome:** Created `.tag-chips` and `.chip` CSS classes and updated dynamic card generation in JavaScript.
-
-### Prompt 3
-> **Prompt:** "Write pytest test cases using FastAPI TestClient to test creating tasks with tags, stripping empty tags, filtering by tag, and preserving tags during status updates."  
-> **Outcome:** Added full automated test coverage for all tag operations in `tests/test_tasks.py`.
+This document tracks key AI interactions during the implementation of **Task Categorization (Tags)** and **Search & Combined Filtering**.
 
 ---
 
-## Feature 2: Search & Combined Filters
+## Weak Prompt vs. Strong Prompt Refactoring
 
-### Prompt 1
-> **Prompt:** "How do I construct a SQLAlchemy query using `.ilike()` and `OR` conditions to search across both title and description fields in FastAPI?"  
-> **Outcome:** Updated `get_tasks` endpoint in `routers/tasks.py` to handle case-insensitive multi-column search.
+To demonstrate effective AI prompting techniques, an initial weak/unconstrained prompt was refactored into a structured, highly effective prompt.
 
-### Prompt 2
-> **Prompt:** "How can I combine multiple optional query parameters (`status`, `priority`, `search`, `tag`) in a single FastAPI route?"  
-> **Outcome:** Chained conditional query filters dynamically based on non-null parameters.
+### 🔴 Original (Weak Prompt)
+> "Add search and filtering to my tasks api."
 
-### Prompt 3
-> **Prompt:** "Write automated pytest functions to test searching titles/descriptions, combining status and priority, handling non-matching queries returning HTTP 200 `[]`, and testing invalid input handling."  
-> **Outcome:** Added full test suite verifying search and combined filter behaviors in `tests/test_tasks.py`.
+* **Why it failed / produced poor results:** 
+  * Unclear scope: Didn't specify which fields to search (title, description, or both).
+  * Lacked constraints: Didn't specify the framework (FastAPI/SQLAlchemy) or query parameter structure.
+  * Result: The AI attempted to rewrite the entire router, created unnecessary endpoint paths (`/api/tasks/search`), and broke existing pagination/response schema.
+
+---
+
+### 🟢 Rewritten (Strong Prompt)
+> "Modify the existing `GET /api/tasks/` endpoint in FastAPI using SQLAlchemy. Extend the endpoint query parameters to accept optional `status`, `priority`, `tag`, and `search` arguments. 
+> - If `search` is provided, perform a case-insensitive substring search across BOTH `models.Task.title` AND `models.Task.description` using an SQL OR condition.
+> - Combine all active filters using SQL AND logic.
+> - Return a `200 OK` with an empty array `[]` if no tasks match. 
+> - Do not change the existing task response schema."
+
+* **Why it succeeded:**
+  * Clear scope: Defined exact fields, logic (`OR` vs `AND`), and target endpoint.
+  * Explicit constraints: Specified FastAPI, SQLAlchemy `.ilike()`, status code `200`, and response array structure.
+  * Preserved integrity: Ensured existing response contracts were untouched.
+
+---
+
+## Feature 1: Task Categorization with Tags
+
+### Prompt 1.1: Backend Data Model & Normalization Logic
+* **Prompt:** 
+  > "I need to add a `tags` field to my Task model in FastAPI with SQLAlchemy and SQLite. Store tags as a comma-separated string on the Task table. Write a helper function in Pydantic/routers that takes raw tag input like `' frontend, bug, , urgent '`, strips whitespace, removes empty values, and normalizes it to `'frontend,bug,urgent'`."
+* **AI Output:**
+  * Suggested adding `tags = Column(String, nullable=True, default="")` to `models.py`.
+  * Provided a string cleaning snippet using python list comprehension: `",".join([t.strip() for t in raw.split(",") if t.strip()])`.
+* **Decision & Action:**
+  * **ACCEPTED:** The string cleaning logic was clean, idiomatic, and handled edge cases like multiple empty commas (`" , , "`).
+  * **EDITED:** Ensured `default=""` was set on the model so database queries return empty strings instead of `None` for un-tagged tasks.
+
+---
+
+### Prompt 1.2: Tag Filtering in Router
+* **Prompt:**
+  > "Update the `GET /api/tasks/` endpoint in `app/routers.py` to accept an optional `tag: Optional[str] = None` query parameter. Use SQLAlchemy `.ilike()` to match tasks whose `tags` column contains the tag parameter."
+* **AI Output:**
+  ```python
+  if tag:
+      tag_lower = f"%{tag.lower()}%"
+      query = query.filter(models.Task.tags.ilike(tag_lower))
