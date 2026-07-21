@@ -1,16 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Optional
-from . import models, database
+from . import models, database, business_rules
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
+
+VALID_STATUSES = {"ToDo", "InProgress", "Done"}
+VALID_PRIORITIES = {"High", "Medium", "Low"}
+
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_task(task_data: dict, db: Session = Depends(database.get_db)):
     title = task_data.get("title")
     if not title or not str(title).strip():
         raise HTTPException(status_code=422, detail="Title required")
-    
+
     raw_tags = task_data.get("tags") or ""
     tags_list = [t.strip() for t in raw_tags.split(",") if t.strip()]
     normalized_tags = ",".join(tags_list)
@@ -23,11 +27,12 @@ def create_task(task_data: dict, db: Session = Depends(database.get_db)):
         tags=normalized_tags,
         assignee=task_data.get("assignee", "")
     )
-    
+
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
     return db_task
+
 
 @router.get("/")
 def get_tasks(
@@ -37,6 +42,13 @@ def get_tasks(
     search: Optional[str] = None,
     db: Session = Depends(database.get_db)
 ):
+    # US-2.4: reject invalid filter values early with an explicit error,
+    # instead of silently returning an empty result set.
+    if status is not None and status not in VALID_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status: '{status}'")
+    if priority is not None and priority not in VALID_PRIORITIES:
+        raise HTTPException(status_code=400, detail=f"Invalid priority: '{priority}'")
+
     query = db.query(models.Task)
 
     if status:
@@ -49,11 +61,12 @@ def get_tasks(
     if search:
         search_pattern = f"%{search.lower()}%"
         query = query.filter(
-            (models.Task.title.ilike(search_pattern)) | 
+            (models.Task.title.ilike(search_pattern)) |
             (models.Task.description.ilike(search_pattern))
         )
 
     return query.all()
+
 
 @router.get("/{t_id}")
 def get_task(t_id: int, db: Session = Depends(database.get_db)):
@@ -62,12 +75,13 @@ def get_task(t_id: int, db: Session = Depends(database.get_db)):
         raise HTTPException(status_code=404, detail="Task not found")
     return task
 
+
 @router.put("/{t_id}")
 def update_task(t_id: int, task_data: dict, db: Session = Depends(database.get_db)):
     task = db.query(models.Task).filter(models.Task.id == t_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    
+
     if "tags" in task_data:
         raw_tags = task_data.get("tags") or ""
         tags_clean = [tg.strip() for tg in raw_tags.split(",") if tg.strip()]
@@ -82,22 +96,26 @@ def update_task(t_id: int, task_data: dict, db: Session = Depends(database.get_d
     db.refresh(task)
     return task
 
+
 @router.patch("/{t_id}/status")
 def patch_status(t_id: int, status_data: dict, db: Session = Depends(database.get_db)):
-    valid_statuses = ["ToDo", "InProgress", "Done"]
     new_status = status_data.get("status")
 
-    if new_status not in valid_statuses:
+    if new_status not in VALID_STATUSES:
         raise HTTPException(status_code=400, detail="Invalid status")
 
     task = db.query(models.Task).filter(models.Task.id == t_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
+    # Enforce the state-machine transition matrix (e.g. ToDo -> Done directly is blocked)
+    business_rules.validate_status_transition(task.status, new_status)
+
     task.status = new_status
     db.commit()
     db.refresh(task)
     return task
+
 
 @router.delete("/{t_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(t_id: int, db: Session = Depends(database.get_db)):

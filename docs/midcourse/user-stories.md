@@ -32,9 +32,9 @@
 * **So that** task metadata stays up to date as priorities and categories change.
 
 **Acceptance Criteria:**
-* `PATCH /tasks/{id}` accepts a updated `tags` string parameter.
-* Updating unrelated fields (like `status`) preserves existing tags if `tags` is omitted in the payload.
-* Sending an empty string (`""`) for `tags` successfully clears all tags from the task.
+* `PUT /tasks/{id}` accepts an updated `tags` string parameter alongside the task's other editable fields.
+* Updating unrelated fields (like `status` via `PATCH /tasks/{id}/status`) preserves existing tags, since that endpoint never touches the `tags` column.
+* Sending an empty string (`""`) for `tags` on `PUT /tasks/{id}` successfully clears all tags from the task.
 
 ---
 
@@ -47,7 +47,7 @@
 * Each tag in a comma-separated list is rendered as an individual visual chip element (`.chip`).
 * Tasks with no tags omit the chip container cleanly without rendering blank elements.
 
-> 💡 **AI Assumption Corrected (Feature 1):** 
+> 💡 **AI Assumption Corrected (Feature 1):**
 > **AI Assumption:** The AI initially assumed tags should be stored in a separate relational table with a Many-to-Many foreign key relationship (`TaskTag` junction table).
 > **Correction:** I corrected the AI to store tags as a simple, trimmed comma-separated string directly in the `Task` schema table (`tags` column). This kept the SQLite database lightweight and avoided unnecessary JOIN complexity for our local TaskTracker app.
 
@@ -96,9 +96,10 @@
 * **So that** invalid requests fail early with actionable error responses.
 
 **Acceptance Criteria:**
-* Passing invalid `status` or `priority` values (e.g., `?status=invalid_status`) returns a `400 Bad Request` or `422 Unprocessable Entity`.
-* The error payload explains why the value was rejected.
+* Passing an invalid `status` value (e.g., `?status=invalid_status`) returns a `400 Bad Request` with a detail message naming the rejected value.
+* Passing an invalid `priority` value (e.g., `?priority=Urgent`) returns a `400 Bad Request` with a detail message naming the rejected value.
+* Valid combinations of `status`, `priority`, `tag`, and `search` continue to return `200 OK`.
 
-> 💡 **AI Assumption Corrected (Feature 2):** 
-> **AI Assumption:** The AI assumed the `search` query parameter should only scan the `title` column of the task table.
-> **Correction:** I instructed the AI to extend search filtering to evaluate both `title` AND `description` using an SQL `OR` condition, ensuring users could find tasks based on context written inside task descriptions.
+> 💡 **AI Assumption Corrected (Feature 2):**
+> **AI Assumption:** The AI assumed the `search` query parameter should only scan the `title` column of the task table, and that unrecognized `status`/`priority` values could simply be treated as "no matches" rather than rejected outright.
+> **Correction:** I instructed the AI to extend search filtering to evaluate both `title` AND `description` using an SQL `OR` condition. I also added explicit validation so invalid `status`/`priority` values return `400 Bad Request` instead of silently returning an empty result set, since silent failure would hide client bugs.
