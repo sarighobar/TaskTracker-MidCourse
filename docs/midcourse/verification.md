@@ -1,3 +1,4 @@
+﻿$content = @'
 # Verification & Testing Report
 
 This document records the verification strategy, manual browser tests, automated test suite execution, behavior contracts, and break test evidence for the **TaskTracker** application.
@@ -127,22 +128,64 @@ tags_list = [t.strip() for t in raw_tags.split(",") if t.strip()]
 tags_list = [t.strip() for t in raw_tags.split(",")]
 ```
 
-**Step 1 — Confirm passing (before break):**
+**Step 1 - Confirm passing (before break):**
 ```text
-[PASTE: pytest -v -k test_reject_empty_tag output showing PASSED]
+pytest -v -k test_reject_empty_tag
+===================================================================================== test session starts =====================================================================================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\sghobar\AppData\Local\Programs\Python\Python312\python.exe
+collected 21 items / 20 deselected / 1 selected
+
+tests/test_tasks.py::test_reject_empty_tag PASSED                                                                                                                                        [100%]
+
+================================================================================= 1 passed, 20 deselected, 2 warnings in 0.21s =================================================================================
 ```
 
-**Step 2 — Break the code, re-run:**
+**Step 2 - Break the code, re-run:**
 ```text
-[PASTE: pytest -v -k test_reject_empty_tag output showing FAILED, with the assertion diff]
+pytest -v -k test_reject_empty_tag
+============================================================================================= test session starts ==============================================================================================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\sghobar\AppData\Local\Programs\Python\Python312\python.exe
+collected 21 items / 20 deselected / 1 selected
+
+tests/test_tasks.py::test_reject_empty_tag FAILED                                                                                                                                                         [100%]
+
+=================================================================================================== FAILURES ===================================================================================================
+____________________________________________________________________________________________ test_reject_empty_tag _____________________________________________________________________________________________
+
+client = <starlette.testclient.TestClient object at 0x000002DF24B6BCB0>
+
+    def test_reject_empty_tag(client):
+        response = client.post("/api/tasks/", json={
+            "title": "Clean Database",
+            "tags": "   ,  , backend , , "
+        })
+        assert response.status_code == 201
+>       assert response.json()["tags"] == "backend"
+E       AssertionError: assert ',,backend,,' == 'backend'
+E
+E         - backend
+E         + ,,backend,,
+E         ? ++       ++
+
+tests\test_tasks.py:72: AssertionError
+=========================================================================================== short test summary info ============================================================================================
+FAILED tests/test_tasks.py::test_reject_empty_tag - AssertionError: assert ',,backend,,' == 'backend'
+================================================================================= 1 failed, 20 deselected, 2 warnings in 0.17s =================================================================================
 ```
 
-**Step 3 — Restore the code, re-run to confirm recovery:**
+**Step 3 - Restore the code, re-run to confirm recovery:**
 ```text
-[PASTE: pytest -v -k test_reject_empty_tag output showing PASSED again]
+pytest -v -k test_reject_empty_tag
+============================================================================================= test session starts ==============================================================================================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\sghobar\AppData\Local\Programs\Python\Python312\python.exe
+collected 21 items / 20 deselected / 1 selected
+
+tests/test_tasks.py::test_reject_empty_tag PASSED                                                                                                                                                         [100%]
+
+================================================================================= 1 passed, 20 deselected, 2 warnings in 0.04s =================================================================================
 ```
 
-**What this proves:** the test genuinely exercises the tag-sanitization logic—when the empty-string filter is removed, the test correctly catches that blank tags leak into the stored value.
+**What this proves:** the test genuinely exercises the tag-sanitization logic. Removing the `if t.strip()` filter let blank tokens from `"   ,  , backend , , "` survive into the stored value, producing `,,backend,,` instead of `backend` -- the exact AssertionError above (`assert ',,backend,,' == 'backend'`) demonstrates the test correctly catching a real regression, not just always passing.
 
 ---
 
@@ -160,19 +203,57 @@ if status is not None and status not in VALID_STATUSES:
 #     raise HTTPException(status_code=400, detail=f"Invalid status: '{status}'")
 ```
 
-**Step 1 — Confirm passing (before break):**
+**Step 1 - Confirm passing (before break):**
 ```text
-[PASTE: pytest -v -k test_invalid_status_filter_returns_400 output showing PASSED]
+pytest -v -k test_invalid_status_filter_returns_400
+============================================================================================= test session starts ==============================================================================================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\sghobar\AppData\Local\Programs\Python\Python312\python.exe
+collected 21 items / 20 deselected / 1 selected
+
+tests/test_tasks.py::test_invalid_status_filter_returns_400 PASSED                                                                                                                                        [100%]
+
+================================================================================= 1 passed, 20 deselected, 2 warnings in 0.06s =================================================================================
 ```
 
-**Step 2 — Break the code, re-run:**
+**Step 2 - Break the code, re-run:**
 ```text
-[PASTE: pytest -v -k test_invalid_status_filter_returns_400 output showing FAILED, with the assertion diff]
+pytest -v -k test_invalid_status_filter_returns_400
+============================================================================================= test session starts ==============================================================================================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\sghobar\AppData\Local\Programs\Python\Python312\python.exe
+collected 21 items / 20 deselected / 1 selected
+
+tests/test_tasks.py::test_invalid_status_filter_returns_400 FAILED                                                                                                                                        [100%]
+
+=================================================================================================== FAILURES ===================================================================================================
+____________________________________________________________________________________ test_invalid_status_filter_returns_400 ____________________________________________________________________________________
+
+client = <starlette.testclient.TestClient object at 0x00000163BD533A10>
+
+    def test_invalid_status_filter_returns_400(client):
+        """US-2.4: GET /api/tasks/?status=<invalid> must be rejected, not silently return []."""
+        res = client.get("/api/tasks/?status=NotAStatus")
+>       assert res.status_code == 400
+E       assert 200 == 400
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests\test_tasks.py:155: AssertionError
+=========================================================================================== short test summary info ============================================================================================
+FAILED tests/test_tasks.py::test_invalid_status_filter_returns_400 - assert 200 == 400
+================================================================================= 1 failed, 20 deselected, 2 warnings in 0.13s =================================================================================
 ```
 
-**Step 3 — Restore the code, re-run to confirm recovery:**
+**Step 3 - Restore the code, re-run to confirm recovery:**
 ```text
-[PASTE: pytest -v -k test_invalid_status_filter_returns_400 output showing PASSED again]
+pytest -v -k test_invalid_status_filter_returns_400
+============================================================================================= test session starts ==============================================================================================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\sghobar\AppData\Local\Programs\Python\Python312\python.exe
+collected 21 items / 20 deselected / 1 selected
+
+tests/test_tasks.py::test_invalid_status_filter_returns_400 PASSED                                                                                                                                        [100%]
+
+================================================================================= 1 passed, 20 deselected, 2 warnings in 0.16s =================================================================================
 ```
 
-**What this proves:** the test genuinely exercises the status-filter validation — when the check is removed, an invalid `?status=` value silently falls through to `200 OK` with `[]` instead of `400`, and the test correctly catches that.
+**What this proves:** the test genuinely exercises the status-filter validation. With the validation check commented out, `GET /api/tasks/?status=NotAStatus` silently fell through to a `200 OK` instead of the required `400 Bad Request` -- the exact AssertionError above (`assert 200 == 400`) demonstrates the test correctly catching a real regression, not just always passing.
+'@
+Set-Content -Path "docs\midcourse\verification.md" -Value $content -Encoding utf8
