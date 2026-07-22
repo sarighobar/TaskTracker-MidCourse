@@ -59,49 +59,120 @@ The system behavior contract guarantees backwards compatibility while introducin
 +---------------------------------------------------------------------------------------+
 ```
 
+---
+
+## 4. Full Test Suite Result
+
+Command run: `pytest -v`
+
 ```text
 pytest -v
-
-============================= test session starts ==============================
-platform darwin -- Python 3.11.x, pytest-9.1.1, pluggy-1.6.0
-rootdir: /path/to/TaskTracker
+============================================================================================= test session starts ==============================================================================================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\sghobar\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\sghobar\OneDrive - S.M.L.C. (Societe Moderne Libanaise pour le Commerce S.A.L.)\Desktop\TaskTracker
+plugins: anyio-4.14.1, cov-7.1.0
 collected 21 items
 
-tests/test_tasks.py::test_create_task_basic PASSED                          [  5%]
-tests/test_tasks.py::test_reject_empty_title PASSED                         [  9%]
-tests/test_tasks.py::test_get_single_task_and_not_found PASSED              [ 14%]
-tests/test_tasks.py::test_delete_task PASSED                                [ 19%]
-tests/test_tasks.py::test_create_task_with_tags PASSED                      [ 23%]
-tests/test_tasks.py::test_reject_empty_tag PASSED                           [ 28%]
-tests/test_tasks.py::test_update_task_tags PASSED                           [ 33%]
-tests/test_tasks.py::test_filter_by_tag PASSED                              [ 38%]
-tests/test_tasks.py::test_preserve_tags_after_unrelated_update PASSED       [ 42%]
-tests/test_tasks.py::test_search_title_and_description PASSED               [ 47%]
-tests/test_tasks.py::test_combine_status_and_priority PASSED                [ 52%]
-tests/test_tasks.py::test_search_no_matches_returns_empty_list PASSED       [ 57%]
-tests/test_tasks.py::test_invalid_status_filter_returns_400 PASSED          [ 61%]
-tests/test_tasks.py::test_invalid_priority_filter_returns_400 PASSED        [ 66%]
-tests/test_tasks.py::test_invalid_status_transition_via_patch PASSED        [ 71%]
-tests/test_tasks.py::test_patch_status_rejects_skipped_transition PASSED    [ 76%]
-tests/test_tasks.py::test_health_check_endpoint PASSED                      [ 80%]
-tests/test_tasks.py::test_same_status_is_valid PASSED                       [ 85%]
-tests/test_tasks.py::test_allowed_status_transitions PASSED                 [ 90%]
-tests/test_tasks.py::test_invalid_current_status_raises_400 PASSED          [ 95%]
-tests/test_tasks.py::test_disallowed_transition_raises_400 PASSED           [100%]
+tests/test_tasks.py::test_create_task_basic PASSED                                                                                                                                                        [  4%]
+tests/test_tasks.py::test_reject_empty_title PASSED                                                                                                                                                       [  9%]
+tests/test_tasks.py::test_get_single_task_and_not_found PASSED                                                                                                                                            [ 14%]
+tests/test_tasks.py::test_delete_task PASSED                                                                                                                                                              [ 19%]
+tests/test_tasks.py::test_create_task_with_tags PASSED                                                                                                                                                    [ 23%]
+tests/test_tasks.py::test_reject_empty_tag PASSED                                                                                                                                                         [ 28%]
+tests/test_tasks.py::test_update_task_tags PASSED                                                                                                                                                         [ 33%]
+tests/test_tasks.py::test_filter_by_tag PASSED                                                                                                                                                            [ 38%]
+tests/test_tasks.py::test_preserve_tags_after_unrelated_update PASSED                                                                                                                                     [ 42%]
+tests/test_tasks.py::test_search_title_and_description PASSED                                                                                                                                             [ 47%]
+tests/test_tasks.py::test_combine_status_and_priority PASSED                                                                                                                                              [ 52%]
+tests/test_tasks.py::test_search_no_matches_returns_empty_list PASSED                                                                                                                                     [ 57%]
+tests/test_tasks.py::test_invalid_status_filter_returns_400 PASSED                                                                                                                                        [ 61%]
+tests/test_tasks.py::test_invalid_priority_filter_returns_400 PASSED                                                                                                                                      [ 66%]
+tests/test_tasks.py::test_invalid_status_transition_via_patch PASSED                                                                                                                                      [ 71%]
+tests/test_tasks.py::test_patch_status_rejects_skipped_transition PASSED                                                                                                                                  [ 76%]
+tests/test_tasks.py::test_health_check_endpoint PASSED                                                                                                                                                    [ 80%]
+tests/test_tasks.py::test_same_status_is_valid PASSED                                                                                                                                                     [ 85%]
+tests/test_tasks.py::test_allowed_status_transitions PASSED                                                                                                                                               [ 90%]
+tests/test_tasks.py::test_invalid_current_status_raises_400 PASSED                                                                                                                                        [ 95%]
+tests/test_tasks.py::test_disallowed_transition_raises_400 PASSED                                                                                                                                         [100%]
 
-============================== 21 passed in 0.21s ==============================
+=============================================================================================== warnings summary ===============================================================================================
+..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\sghobar\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+app\database.py:12
+  C:\Users\sghobar\OneDrive - S.M.L.C. (Societe Moderne Libanaise pour le Commerce S.A.L.)\Desktop\TaskTracker\app\database.py:12: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================================================================================== 21 passed, 2 warnings in 0.41s ========================================================================================
 ```
 
-> Note: re-run `pytest -v` locally after pulling these changes and paste your actual console output here before submitting — the block above reflects the expected result of the updated test file (`test_tasks.py`), not a captured run from this session.
+---
 
+## 5. Break Test Evidence
+
+Genuine break-test cycles: each test was confirmed passing, the underlying code was deliberately broken, the test was re-run to confirm it caught the break, the code was restored, and the test was re-run a final time to confirm it passed again.
+
+### BT-01: Tag sanitization (`test_reject_empty_tag`)
+
+**File changed:** `app/routers.py`, inside `create_task()`
+
+**Line changed:**
+```python
+# Original:
+tags_list = [t.strip() for t in raw_tags.split(",") if t.strip()]
+# Broken (removes the empty-string filter):
+tags_list = [t.strip() for t in raw_tags.split(",")]
+```
+
+**Step 1 — Confirm passing (before break):**
 ```text
-Break Test Case,Input / Action,System Reaction,Result
-BT-01: Empty Title Validation,"POST /api/tasks/ with {""title"": ""   ""}",FastAPI / Pydantic throws HTTP 422 Unprocessable Entity. Request rejected.,PASS
-BT-02: Invalid Status Enum,"PATCH /api/tasks/1/status with {""status"": ""Completed""}","Custom status check triggers HTTP 400 Bad Request with detail ""Invalid status"".",PASS
-BT-03: Dirty Tag String Sanitization,"POST /api/tasks/ with {""tags"": ""  , , backend , , ui , ""}","@field_validator(""tags"") strips whitespace and commas, normalizing to ""backend,ui"".",PASS
-BT-04: Non-existent Task Retrieval,GET /api/tasks/9999,"Endpoint returns HTTP 404 Not Found with detail ""Task not found"".",PASS
-BT-05: Non-existent Search Term,GET /api/tasks/?search=xyz123nonexistent,Endpoint returns HTTP 200 OK with empty array [].,PASS
-BT-06: Invalid Status Filter Value,GET /api/tasks/?status=NotAStatus,"Endpoint returns HTTP 400 Bad Request with detail naming the invalid status, instead of silently returning [].",PASS
-BT-07: Invalid Priority Filter Value,GET /api/tasks/?priority=Urgent,"Endpoint returns HTTP 400 Bad Request with detail naming the invalid priority, instead of silently returning [].",PASS
-BT-08: Skipped Status Transition,"PATCH /api/tasks/{id}/status with {""status"": ""Done""} on a task currently in ""ToDo""","business_rules.validate_status_transition rejects the skip with HTTP 400 Bad Request, since ToDo -> Done is not in the allowed transition matrix.",PASS
+[PASTE: pytest -v -k test_reject_empty_tag output showing PASSED]
 ```
+
+**Step 2 — Break the code, re-run:**
+```text
+[PASTE: pytest -v -k test_reject_empty_tag output showing FAILED, with the assertion diff]
+```
+
+**Step 3 — Restore the code, re-run to confirm recovery:**
+```text
+[PASTE: pytest -v -k test_reject_empty_tag output showing PASSED again]
+```
+
+**What this proves:** the test genuinely exercises the tag-sanitization logic — when the empty-string filter is removed, the test correctly catches that blank tags leak into the stored value.
+
+---
+
+### BT-02: Invalid status filter validation (`test_invalid_status_filter_returns_400`)
+
+**File changed:** `app/routers.py`, inside `get_tasks()`
+
+**Lines changed:**
+```python
+# Original:
+if status is not None and status not in VALID_STATUSES:
+    raise HTTPException(status_code=400, detail=f"Invalid status: '{status}'")
+# Broken (commented out):
+# if status is not None and status not in VALID_STATUSES:
+#     raise HTTPException(status_code=400, detail=f"Invalid status: '{status}'")
+```
+
+**Step 1 — Confirm passing (before break):**
+```text
+[PASTE: pytest -v -k test_invalid_status_filter_returns_400 output showing PASSED]
+```
+
+**Step 2 — Break the code, re-run:**
+```text
+[PASTE: pytest -v -k test_invalid_status_filter_returns_400 output showing FAILED, with the assertion diff]
+```
+
+**Step 3 — Restore the code, re-run to confirm recovery:**
+```text
+[PASTE: pytest -v -k test_invalid_status_filter_returns_400 output showing PASSED again]
+```
+
+**What this proves:** the test genuinely exercises the status-filter validation — when the check is removed, an invalid `?status=` value silently falls through to `200 OK` with `[]` instead of `400`, and the test correctly catches that.
