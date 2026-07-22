@@ -142,7 +142,7 @@ tags_list = [t.strip() for t in raw_tags.split(",")]
 [PASTE: pytest -v -k test_reject_empty_tag output showing PASSED again]
 ```
 
-**What this proves:** the test genuinely exercises the tag-sanitization logic — when the empty-string filter is removed, the test correctly catches that blank tags leak into the stored value.
+**What this proves:** the test genuinely exercises the tag-sanitization logic—when the empty-string filter is removed, the test correctly catches that blank tags leak into the stored value.
 
 ---
 
