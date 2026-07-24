@@ -9,10 +9,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Set Python path so imports resolve cleanly
+# Set Python path
 ENV PYTHONPATH=/app
 
-# Create non-root user and grant write permissions to /app for SQLite (tasks.db)
+# Create non-root user and fix permissions
 RUN adduser --disabled-password --gecos "" appuser && \
     chown -R appuser:appuser /app
 
@@ -20,5 +20,4 @@ USER appuser
 
 EXPOSE 8000
 
-# Bind uvicorn to 0.0.0.0
 CMD ["sh", "-c", "if [ -f app/main.py ]; then uvicorn app.main:app --host 0.0.0.0 --port 8000; else uvicorn main:app --host 0.0.0.0 --port 8000; fi"]
