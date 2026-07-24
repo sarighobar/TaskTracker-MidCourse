@@ -1,4 +1,4 @@
-$finalAiReview = @'
+﻿$finalAiReview = @'
 # Final AI Review and Ownership Evidence
 
 ## AGENTS.md Guardrails

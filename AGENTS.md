@@ -1,4 +1,4 @@
-$agents = @'
+﻿$agents = @'
 # Project AI Guardrails & Agent Guidelines
 
 ## Tech Stack
@@ -17,5 +17,8 @@ $agents = @'
 2. Docs First: Any structural API change must update docs/ before implementation.
 3. No Scope Creep: Do not add unrequested features (e.g., auth, third-party databases, webhooks).
 4. Secret Isolation: Never commit, print, or transmit real credentials or .env contents.
+5. Protected Paths: Any change to app/ or frontend/ must be a small bug fix, security fix, or documentation-supported correction, and must be explained in docs/final-ai-review.md.
 '@
 Set-Content -Path "AGENTS.md" -Value $agents -Encoding utf8
+
+
