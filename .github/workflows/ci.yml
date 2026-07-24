@@ -38,7 +38,7 @@ jobs:
       - name: Build Docker image
         run: docker build -t tasktracker .
 
-      - - name: Run container
+      - name: Run container
         run: docker run -d -p 8000:8000 --name tasktracker-test tasktracker
 
       - name: Wait for container to be ready
