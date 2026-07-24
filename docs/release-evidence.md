@@ -48,10 +48,10 @@ tests/test_tasks.py::test_disallowed_transition_raises_400 PASSED [100%]
 - **Notes on this baseline:** `Frontend/` was renamed to `frontend/` (lowercase) for consistency with the required repository structure and to avoid case-sensitivity issues in CI/Docker (Linux is case-sensitive; Windows is not). `app/main.py`'s `FileResponse("Frontend/index.html")` was updated to `FileResponse("frontend/index.html")` to match. This is a documentation-supported path correction, not a new feature -- re-running the full test suite and the manual frontend check above confirms nothing broke as a result.
 
 ## CI evidence
-- Workflow file:
-- Latest run link or note:
-- Test command used by CI:
-- Shortcut check: no continue-on-error / no || true / pytest is not skipped.
+- Workflow file: .github/workflows/ci.yml
+- Latest run link or note: https://github.com/sarighobar/TaskTracker-MidCourse/actions/runs/30073048328 — Status: Success, triggered by push to final-project (commit 9598434), completed in 17s.
+- Test command used by CI: `pytest -v` (via the "Run tests" step)
+- Shortcut check: confirmed no continue-on-error, no `|| true`, pytest is not skipped, Python version is explicitly pinned to 3.12, and dependencies are installed via `pip install -r requirements.txt` before the test step runs.
 
 ## Docker evidence
 - Build command:
@@ -67,3 +67,6 @@ tests/test_tasks.py::test_disallowed_transition_raises_400 PASSED [100%]
 | | | | |
 | | | | |
 | | | | |
+
+
+
