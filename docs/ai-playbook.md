@@ -1,5 +1,4 @@
-$aiPlaybook = @'
-# Personal AI Playbook
+﻿# Personal AI Playbook
 
 ## When I reach for AI first
 - Drafting repetitive boilerplate code (e.g., standard FastAPI endpoints or Pydantic models).
@@ -35,5 +34,3 @@ $aiPlaybook = @'
 | Infrastructure | Verify non-root permissions and network host bindings. |
 | Never-Paste Rule | No credentials, `.env` values, API tokens, or proprietary paths. |
 | Golden Rule | I own every single line of code merged into `final-project`. |
-'@
-Set-Content -Path "docs\ai-playbook.md" -Value $aiPlaybook -Encoding utf8

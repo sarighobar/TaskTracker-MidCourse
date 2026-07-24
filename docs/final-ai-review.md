@@ -1,5 +1,4 @@
-﻿$finalAiReview = @'
-# Final AI Review and Ownership Evidence
+﻿# Final AI Review and Ownership Evidence
 
 ## AGENTS.md Guardrails
 - Repo-specific stack and commands included: Yes
@@ -7,11 +6,13 @@
 - Unexpected app/frontend edits rule included: Yes
 
 ## AI Code Review Mini-Log
+Reviewed file: `Dockerfile`
+
 | AI Comment | Grade | Reason | Decision |
 |---|---|---|---|
-| "Add type annotations to task query parameters." | Useful | Improves readability and editor auto-completion. | Accepted |
-| "Replace SQLite with PostgreSQL for production scale." | Wrong | Violates course scope rules and single-container setup. | Rejected |
-| "Add explicit logging to router endpoints." | Noise | Unnecessary clutter for this lightweight release. | Rejected |
+| Suggested a conditional shell check (`if [ -f app/main.py ]`) in the `CMD` instruction to handle two possible project layouts | Noise | The project structure is fixed and known -- `app/main.py` always exists in this repo, so the conditional adds unnecessary complexity for a case that will never occur | Flagged for simplification to a direct `CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]` |
+| Added `chown -R appuser:appuser /app` after creating the non-root `appuser` | Useful | Without it, the container crashed on startup -- confirmed via CI logs showing `curl: (7) Failed to connect to 127.0.0.1 port 8000` -- because the non-root user could not write `tasks.db` into a root-owned directory | Accepted; this was the actual fix for a real CI failure |
+| Suggested adding explicit `VALID_STATUSES`/`VALID_PRIORITIES` validation to `app/routers.py`'s `get_tasks()` so invalid filter values return 400 instead of silently returning an empty list | Useful | Closed a real gap between documented behavior and actual implementation | Accepted; covered by `test_invalid_status_filter_returns_400` and `test_invalid_priority_filter_returns_400` in `tests/test_tasks.py` |
 
 ## AI Security Mini-Review
 | Finding | File Evidence | Grade | Reason | Next Action |
@@ -21,7 +22,7 @@
 | Potential hardcoded secret in config | app/database.py | Noise | Local SQLite connection string contains no credentials. | Ignored |
 
 ## Manual Security Check
-Checked all repository files and commit history for plain-text tokens, API keys, or enterprise database paths. Confirmed `.env` and `.gitignore` properly exclude sensitive local files.
+[PLACEHOLDER -- will be filled in Step 6 with real command output]
 
 ## One AI Output I Rejected or Corrected
 AI suggested adding JWT authentication and user registration endpoints. I rejected this recommendation to prevent scope creep and keep the application simple and focused on task tracking.
@@ -33,5 +34,3 @@ AI suggested adding JWT authentication and user registration endpoints. I reject
 
 ## Ownership Statement
 I am completely confident submitting this repository as my own work. While AI assisted with formatting, test structure, and security auditing, I personally reviewed, validated, and tested every line of code. I actively rejected suggestions that violated project constraints and understand the complete codebase architecture.
-'@
-Set-Content -Path "docs\final-ai-review.md" -Value $finalAiReview -Encoding utf8
