@@ -48,25 +48,24 @@ tests/test_tasks.py::test_disallowed_transition_raises_400 PASSED [100%]
 - **Notes on this baseline:** `Frontend/` was renamed to `frontend/` (lowercase) for consistency with the required repository structure and to avoid case-sensitivity issues in CI/Docker (Linux is case-sensitive; Windows is not). `app/main.py`'s `FileResponse("Frontend/index.html")` was updated to `FileResponse("frontend/index.html")` to match. This is a documentation-supported path correction, not a new feature -- re-running the full test suite and the manual frontend check above confirms nothing broke as a result.
 
 ## CI evidence
-- Workflow file: .github/workflows/ci.yml
-- Latest run link or note: https://github.com/sarighobar/TaskTracker-MidCourse/actions/runs/30073048328 — Status: Success, triggered by push to final-project (commit 9598434), completed in 17s.
-- Test command used by CI: `pytest -v` (via the "Run tests" step)
-- Shortcut check: confirmed no continue-on-error, no `|| true`, pytest is not skipped, Python version is explicitly pinned to 3.12, and dependencies are installed via `pip install -r requirements.txt` before the test step runs.
+- **Workflow file:** `.github/workflows/ci.yml`
+- **Latest run link or note:** https://github.com/sarighobar/TaskTracker-MidCourse/actions — Status: Success, triggered by push to `final-project` branch.
+- **Test command used by CI:** `pytest -v` (via the "Run tests" step)
+- **Shortcut check:** Confirmed no continue-on-error, no `|| true`, pytest is not skipped, Python version is explicitly pinned to 3.12, and dependencies are installed via `pip install -r requirements.txt` before the test step runs.
 
 ## Docker evidence
-- Build command:
-- Run command:
-- /health check:
-- Non-root check, if implemented:
-- No-baked-secrets check:
+- **Build command:** `docker build -t tasktracker .`
+- **Run command:** `docker run -d -p 8000:8000 --name tasktracker-test tasktracker`
+- **/health check:** `curl --fail http://127.0.0.1:8000/health` -> HTTP 200 OK (`{"status":"ok"}`)
+- **Non-root check:** Container runs under a dedicated `appuser` created via `RUN adduser --disabled-password --gecos "" appuser` and switching execution context with `USER appuser`. Ownership of `/app` is recursively granted via `chown -R appuser:appuser /app` to permit SQLite file creation (`tasks.db`).
+- **No-baked-secrets check:** Verified `.dockerignore` excludes `.env`, `tasks.db`, `.pytest_cache`, and `__pycache__`. Confirmed no secret variables, tokens, or local credentials exist within the Docker image layers.
 
 ## Documentation claim-vs-reality log
 
 | Claim checked | Evidence used | Result | Change made, if any |
 |---|---|---|---|
-| | | | |
-| | | | |
-| | | | |
-
-
-
+| Local API startup command | Terminal execution (`uvicorn app.main:app --reload`) | Valid | None |
+| GET `/health` endpoint output | `curl.exe http://127.0.0.1:8000/health` | Valid | Returns `{"status":"ok"}` |
+| Static frontend directory casing | Directory listing and Linux CI execution | Inconsistent | Renamed `Frontend/` to `frontend/` and updated `app/main.py` path |
+| Non-root container runtime | Container execution logs and `Dockerfile` inspection | Invalid | Added `appuser` creation and `chown -R appuser:appuser /app` to allow non-root SQLite file writes |
+| Uvicorn container port binding | Docker CI health check step | Invalid | Changed host binding in `Dockerfile` from default `127.0.0.1` to `0.0.0.0` |
