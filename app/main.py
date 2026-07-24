@@ -23,7 +23,7 @@ app.include_router(router)
 
 @app.get("/")
 async def read_index():
-    return FileResponse("Frontend/index.html")
+    return FileResponse("frontend/index.html")
 
 @app.get("/health", status_code=status.HTTP_200_OK)
 async def health_check():
