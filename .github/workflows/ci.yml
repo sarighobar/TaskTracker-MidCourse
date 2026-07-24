@@ -26,3 +26,29 @@ jobs:
 
       - name: Run tests
         run: pytest -v
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t tasktracker .
+
+      - name: Run container
+        run: docker run -d -p 8000:8000 --name tasktracker-test tasktracker
+
+      - name: Wait for container to be ready
+        run: sleep 3
+
+      - name: Verify /health endpoint
+        run: |
+          curl --fail http://127.0.0.1:8000/health
+          echo "Health check passed"
+
+      - name: Stop container
+        if: always()
+        run: docker stop tasktracker-test
