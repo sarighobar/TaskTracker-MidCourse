@@ -1,9 +1,16 @@
-# Python cache
+﻿# Python & Virtual Environments
 __pycache__/
 *.pyc
-.pytest_cache/
+.venv/
+venv/
 
-# Databases
+# Environment & Secrets
+.env
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+
+# SQLite Databases
 *.db
 tasks.db
-.coverage
