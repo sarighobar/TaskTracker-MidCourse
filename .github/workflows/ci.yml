@@ -38,11 +38,17 @@ jobs:
       - name: Build Docker image
         run: docker build -t tasktracker .
 
-      - name: Run container
+      - - name: Run container
         run: docker run -d -p 8000:8000 --name tasktracker-test tasktracker
 
       - name: Wait for container to be ready
         run: sleep 3
+
+      - name: Show container status (debug)
+        run: docker ps -a
+
+      - name: Show container logs (debug)
+        run: docker logs tasktracker-test
 
       - name: Verify /health endpoint
         run: |
