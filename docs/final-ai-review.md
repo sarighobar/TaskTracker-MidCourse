@@ -22,7 +22,7 @@ Reviewed file: `Dockerfile`
 | Potential hardcoded secret in config | app/database.py | Noise | Local SQLite connection string contains no credentials. | Ignored |
 
 ## Manual Security Check
-[PLACEHOLDER -- will be filled in Step 6 with real command output]
+Manually searched the full commit history for leaked secrets by running `git log --all -p | Select-String -Pattern "password|secret|api_key|token"` across every commit in the repository (not just the current file tree), and separately ran `git ls-files | Select-String "\.env"` to confirm no `.env` file has ever been tracked. The first command returned 20 matches, but every one was the word "secret"/"password"/"token" appearing inside my own documentation and rules (e.g. "Secret Isolation," "Never-Paste Rule," "No credentials... into AI prompts," a note that the SQLite connection string "contains no credentials") -- not an actual leaked credential value. The second command returned no results. This matters because the AI security review above only scans the current working tree for obvious patterns; checking full commit history separately closes a real gap an AI pass on the live files alone would miss, e.g. a secret that was committed and later deleted but still recoverable from git history.
 
 ## One AI Output I Rejected or Corrected
 AI suggested adding JWT authentication and user registration endpoints. I rejected this recommendation to prevent scope creep and keep the application simple and focused on task tracking.
@@ -34,3 +34,4 @@ AI suggested adding JWT authentication and user registration endpoints. I reject
 
 ## Ownership Statement
 I am completely confident submitting this repository as my own work. While AI assisted with formatting, test structure, and security auditing, I personally reviewed, validated, and tested every line of code. I actively rejected suggestions that violated project constraints and understand the complete codebase architecture.
+
